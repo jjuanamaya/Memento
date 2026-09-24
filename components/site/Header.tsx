@@ -21,7 +21,7 @@ export async function Header() {
   }
 
   return (
-    <header className="relative border-b border-border">
+    <header className="relative z-50 border-b border-border bg-background">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
         <Link href="/" className="text-lg font-semibold tracking-wide uppercase">
           Memento

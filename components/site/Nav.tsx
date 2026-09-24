@@ -69,7 +69,13 @@ export function Nav({
       </button>
 
       {abierto && (
-        <div className="absolute inset-x-0 top-full border-b border-border bg-background sm:hidden">
+        <>
+          <button
+            aria-label="Cerrar menú"
+            onClick={() => setAbierto(false)}
+            className="fixed inset-0 z-40 sm:hidden"
+          />
+          <div className="absolute inset-x-0 top-full z-50 border-b border-border bg-background shadow-lg sm:hidden">
           <nav className="flex flex-col gap-1 px-6 py-4 text-sm text-muted">
             {links.map((link) => (
               <Link
@@ -112,7 +118,8 @@ export function Nav({
               </Link>
             )}
           </nav>
-        </div>
+          </div>
+        </>
       )}
     </>
   );

@@ -99,6 +99,12 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
 
     if (errorPedido || !nuevoPedidoId) {
       setEnviando(false);
+      if (errorPedido) {
+        // El mensaje completo queda en la consola del navegador para poder
+        // diagnosticar rápido (código de Postgres/PostgREST, detalle, hint),
+        // sin mostrarle ese detalle técnico al cliente.
+        console.error("Error al crear pedido:", errorPedido);
+      }
       const mensajeConocido =
         errorPedido?.message?.includes("stock") || errorPedido?.message?.includes("sesión");
       setError(

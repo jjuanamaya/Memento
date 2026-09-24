@@ -56,6 +56,7 @@ export function SuscripcionForm({ cajas, tematicas, zonas }: SuscripcionFormProp
     setEnviando(false);
 
     if (errorSuscripcion) {
+      console.error("Error al crear suscripción:", errorSuscripcion);
       setError("No pudimos crear la suscripción. Probá de nuevo.");
       return;
     }

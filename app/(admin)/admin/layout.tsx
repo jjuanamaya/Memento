@@ -19,7 +19,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="print:hidden">
         <AdminNav nombre={perfil?.nombre ?? null} />
       </div>
-      <main className="flex-1">{children}</main>
+      <main id="contenido" className="flex-1">
+        {children}
+      </main>
     </div>
   );
 }

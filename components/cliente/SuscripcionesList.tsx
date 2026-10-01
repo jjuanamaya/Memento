@@ -23,6 +23,12 @@ export function SuscripcionesList({ suscripcionesIniciales }: { suscripcionesIni
   const [error, setError] = useState("");
 
   async function cambiarEstado(id: string, estado: EstadoSuscripcion) {
+    if (
+      estado === "cancelada" &&
+      !window.confirm("¿Cancelar la suscripción? No vas a recibir más entregas y no se puede reactivar después.")
+    ) {
+      return;
+    }
     setGuardando(id);
     setError("");
 
@@ -42,7 +48,9 @@ export function SuscripcionesList({ suscripcionesIniciales }: { suscripcionesIni
   if (suscripciones.length === 0) {
     return (
       <div className="animate-fade-in-up mt-8 rounded-2xl border border-muted/30 bg-surface p-8 text-center">
-        <span className="text-3xl">🎁</span>
+        <span aria-hidden="true" className="text-3xl">
+          🎁
+        </span>
         <p className="mt-3 font-medium">Todavía no tenés ninguna suscripción.</p>
         <p className="mt-1 text-sm text-muted">Elegí tus temáticas favoritas y dejá que la sorpresa llegue sola.</p>
         <a
@@ -57,7 +65,11 @@ export function SuscripcionesList({ suscripcionesIniciales }: { suscripcionesIni
 
   return (
     <div className="mt-6 space-y-3">
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-red-400">
+          {error}
+        </p>
+      )}
 
       {suscripciones.map((s, i) => (
         <div
@@ -88,7 +100,7 @@ export function SuscripcionesList({ suscripcionesIniciales }: { suscripcionesIni
                 onClick={() => cambiarEstado(s.id, "pausada")}
                 className="text-sm text-muted transition-colors hover:text-foreground disabled:opacity-50"
               >
-                Pausar
+                Pausar suscripción
               </button>
             )}
             {s.estado === "pausada" && (
@@ -97,7 +109,7 @@ export function SuscripcionesList({ suscripcionesIniciales }: { suscripcionesIni
                 onClick={() => cambiarEstado(s.id, "activa")}
                 className="text-sm text-brand transition-opacity hover:opacity-80 disabled:opacity-50"
               >
-                Reactivar
+                Reactivar suscripción
               </button>
             )}
             {s.estado !== "cancelada" && (
@@ -106,7 +118,7 @@ export function SuscripcionesList({ suscripcionesIniciales }: { suscripcionesIni
                 onClick={() => cambiarEstado(s.id, "cancelada")}
                 className="text-sm text-red-400 transition-opacity hover:opacity-80 disabled:opacity-50"
               >
-                Cancelar
+                Cancelar suscripción
               </button>
             )}
           </div>

@@ -118,12 +118,14 @@ export function TematicasTable({ tematicasIniciales }: { tematicasIniciales: Tem
 
               <div className="mt-4 flex gap-2">
                 <button
+                  aria-label={`Editar ${t.nombre}`}
                   onClick={() => setModal({ tipo: "editar", tematica: t })}
                   className="flex-1 rounded-lg border border-muted/70 px-3 py-1.5 text-xs font-medium hover:border-brand/40"
                 >
                   Editar
                 </button>
                 <button
+                  aria-label={`Eliminar ${t.nombre}`}
                   onClick={() => eliminarTematica(t)}
                   disabled={eliminando === t.id}
                   className="flex-1 rounded-lg border border-red-400/40 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 disabled:opacity-50"

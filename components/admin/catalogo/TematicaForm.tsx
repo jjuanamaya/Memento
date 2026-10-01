@@ -123,7 +123,7 @@ export function TematicaForm({ tematica, onClose, onSaved }: TematicaFormProps) 
           <label className="mb-1 block text-xs font-medium text-muted">Foto de la temática</label>
           {previsualizacion ? (
             <div className="mb-2 flex items-center gap-3">
-              <img src={previsualizacion} alt="" className="h-20 w-20 rounded-lg border border-border object-cover" />
+              <img src={previsualizacion} alt="Vista previa de la foto" className="h-20 w-20 rounded-lg border border-border object-cover" />
               <button
                 type="button"
                 onClick={quitarImagen}

@@ -11,6 +11,7 @@ const links = [
   { href: "/admin/suscripciones", label: "Suscripciones" },
   { href: "/admin/stock", label: "Stock" },
   { href: "/admin/catalogo", label: "Catálogo" },
+  { href: "/admin/arrepentimientos", label: "Arrepentimientos" },
 ];
 
 function estaActivo(pathname: string, href: string) {
@@ -30,7 +31,7 @@ export function AdminNav({ nombre }: { nombre: string | null }) {
           Memento · Admin
         </Link>
 
-        <nav className="hidden items-center gap-1 text-sm md:flex">
+        <nav className="hidden items-center gap-1 text-sm lg:flex">
           {links.map((link) => (
             <Link
               key={link.href}
@@ -46,12 +47,12 @@ export function AdminNav({ nombre }: { nombre: string | null }) {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 text-sm md:flex">
+        <div className="hidden items-center gap-3 text-sm lg:flex">
           <Link
             href="/"
             className="rounded-lg border border-border px-3 py-1.5 text-muted transition-colors hover:border-brand/40 hover:text-foreground"
           >
-            ← Ver tienda
+            <span aria-hidden="true">← </span>Ver tienda
           </Link>
           {nombre && <span className="text-muted">Hola, {nombre}</span>}
           <form action={signOut}>
@@ -59,15 +60,17 @@ export function AdminNav({ nombre }: { nombre: string | null }) {
               type="submit"
               className="rounded-lg bg-brand px-3 py-1.5 font-medium text-brand-foreground transition-opacity hover:opacity-90"
             >
-              Salir
+              Cerrar sesión
             </button>
           </form>
         </div>
 
         <button
-          aria-label="Abrir menú"
+          aria-label={abierto ? "Cerrar menú" : "Abrir menú"}
+          aria-expanded={abierto}
+          aria-controls="menu-movil-admin"
           onClick={() => setAbierto((v) => !v)}
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-border md:hidden"
+          className="flex h-10 w-10 items-center justify-center rounded-lg border border-border lg:hidden"
         >
           <span className="sr-only">Menú</span>
           <div className="flex flex-col gap-1">
@@ -81,11 +84,12 @@ export function AdminNav({ nombre }: { nombre: string | null }) {
       {abierto && (
         <>
           <button
-            aria-label="Cerrar menú"
+            aria-hidden="true"
+            tabIndex={-1}
             onClick={() => setAbierto(false)}
-            className="fixed inset-0 z-40 md:hidden"
+            className="fixed inset-0 z-40 lg:hidden"
           />
-          <div className="absolute inset-x-0 top-full z-50 border-b border-border bg-background shadow-lg md:hidden">
+          <div id="menu-movil-admin" className="absolute inset-x-0 top-full z-50 border-b border-border bg-background shadow-lg lg:hidden">
             <nav className="flex flex-col gap-1 px-6 py-4 text-sm">
               {nombre && <p className="px-2 pb-2 text-xs text-muted">Hola, {nombre}</p>}
               {links.map((link) => (
@@ -108,14 +112,14 @@ export function AdminNav({ nombre }: { nombre: string | null }) {
                 onClick={() => setAbierto(false)}
                 className="rounded-lg px-2 py-3 text-muted transition-colors hover:bg-surface hover:text-foreground"
               >
-                ← Ver tienda
+                <span aria-hidden="true">← </span>Ver tienda
               </Link>
               <form action={signOut}>
                 <button
                   type="submit"
                   className="w-full rounded-lg px-2 py-3 text-left font-medium text-brand transition-colors hover:bg-surface"
                 >
-                  Salir de la cuenta
+                  Cerrar sesión
                 </button>
               </form>
             </nav>

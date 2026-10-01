@@ -121,12 +121,14 @@ export function CajasTable({ cajasIniciales }: { cajasIniciales: Caja[] }) {
 
               <div className="mt-4 flex gap-2">
                 <button
+                  aria-label={`Editar ${c.nombre}`}
                   onClick={() => setModal({ tipo: "editar", caja: c })}
                   className="flex-1 rounded-lg border border-muted/70 px-3 py-1.5 text-xs font-medium hover:border-brand/40"
                 >
                   Editar
                 </button>
                 <button
+                  aria-label={`Eliminar ${c.nombre}`}
                   onClick={() => eliminarCaja(c)}
                   disabled={eliminando === c.id}
                   className="flex-1 rounded-lg border border-red-400/40 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 disabled:opacity-50"

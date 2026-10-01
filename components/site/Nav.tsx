@@ -41,7 +41,7 @@ export function Nav({
             <span>Hola, {nombre || "vos"}</span>
             <form action={signOut}>
               <button type="submit" className="transition-colors hover:text-foreground">
-                Salir
+                Cerrar sesión
               </button>
             </form>
           </div>
@@ -56,7 +56,9 @@ export function Nav({
       </nav>
 
       <button
-        aria-label="Abrir menú"
+        aria-label={abierto ? "Cerrar menú" : "Abrir menú"}
+        aria-expanded={abierto}
+        aria-controls="menu-movil"
         onClick={() => setAbierto((v) => !v)}
         className="flex h-10 w-10 items-center justify-center rounded-lg border border-border sm:hidden"
       >
@@ -71,11 +73,12 @@ export function Nav({
       {abierto && (
         <>
           <button
-            aria-label="Cerrar menú"
+            aria-hidden="true"
+            tabIndex={-1}
             onClick={() => setAbierto(false)}
             className="fixed inset-0 z-40 sm:hidden"
           />
-          <div className="absolute inset-x-0 top-full z-50 border-b border-border bg-background shadow-lg sm:hidden">
+          <div id="menu-movil" className="absolute inset-x-0 top-full z-50 border-b border-border bg-background shadow-lg sm:hidden">
           <nav className="flex flex-col gap-1 px-6 py-4 text-sm text-muted">
             {links.map((link) => (
               <Link
@@ -104,7 +107,7 @@ export function Nav({
                     type="submit"
                     className="w-full rounded-lg px-2 py-3 text-left transition-colors hover:bg-surface hover:text-foreground"
                   >
-                    Salir
+                    Cerrar sesión
                   </button>
                 </form>
               </>

@@ -127,12 +127,14 @@ export function FrecuenciasTable({ frecuenciasIniciales }: { frecuenciasIniciale
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-2">
                       <button
+                        aria-label={`Editar ${f.etiqueta}`}
                         onClick={() => setModal({ tipo: "editar", frecuencia: f })}
                         className="rounded-lg border border-muted/70 px-3 py-1.5 text-xs font-medium hover:border-brand/40"
                       >
                         Editar
                       </button>
                       <button
+                        aria-label={`Eliminar ${f.etiqueta}`}
                         onClick={() => eliminarFrecuencia(f)}
                         disabled={eliminando === f.id}
                         className="rounded-lg border border-red-400/40 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 disabled:opacity-50"

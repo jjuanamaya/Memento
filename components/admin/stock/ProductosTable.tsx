@@ -159,6 +159,7 @@ export function ProductosTable({
                           +/- Stock
                         </button>
                         <button
+                          aria-label={`Editar ${producto.nombre}`}
                           onClick={() => setModal({ tipo: "editar", producto })}
                           className="rounded-lg border border-muted/70 px-3 py-1.5 text-xs font-medium hover:border-brand/40"
                         >

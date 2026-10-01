@@ -9,7 +9,7 @@ const PASOS = [
   {
     numero: "01",
     titulo: "Elegí tu caja",
-    texto: "Tres tamaños, según cuánto quieras sorprender.",
+    texto: "Elegí el tamaño según cuánto quieras sorprender.",
   },
   {
     numero: "02",
@@ -19,16 +19,11 @@ const PASOS = [
   {
     numero: "03",
     titulo: "Nosotros la llevamos",
-    texto: "Coordinamos la entrega y llega lista para regalar.",
+    texto: "Coordinamos con vos la entrega a domicilio.",
   },
 ];
 
 const VALORES = [
-  {
-    icono: "🤲",
-    titulo: "Armada a mano",
-    texto: "Cada caja se prepara una por una, cuidando cada detalle antes de salir.",
-  },
   {
     icono: "✍️",
     titulo: "Hecha a tu medida",
@@ -36,8 +31,13 @@ const VALORES = [
   },
   {
     icono: "📍",
-    titulo: "Cerca tuyo",
-    texto: "Somos de Cañada de Gómez y entregamos en la ciudad, sin vueltas.",
+    titulo: "Entrega en Cañada de Gómez",
+    texto: "Coordinamos la entrega a domicilio dentro de la ciudad.",
+  },
+  {
+    icono: "💳",
+    titulo: "Pagás como prefieras",
+    texto: "Por transferencia o en efectivo al recibir la caja.",
   },
 ];
 
@@ -59,6 +59,11 @@ const PREGUNTAS = [
   {
     pregunta: "¿Puedo pausar o cancelar la suscripción?",
     respuesta: "Sí, desde \"Mis suscripciones\" la pausás, la reactivás o la cancelás cuando quieras.",
+  },
+  {
+    pregunta: "¿Y si me arrepiento de la compra?",
+    respuesta:
+      "Tenés 10 días corridos para arrepentirte. Lo pedís desde el \"Botón de arrepentimiento\", sin registrarte. Los detalles están en la política de cambios y devoluciones.",
   },
 ];
 
@@ -82,8 +87,8 @@ export default async function HomePage() {
               Regalá un momento, no un objeto.
             </h1>
             <p className="animate-fade-in-up mt-6 max-w-md text-lg text-muted [animation-delay:160ms]">
-              En Memento armás una caja de regalo a medida: vos elegís qué va adentro, nosotros la preparamos con
-              cuidado y la llevamos hasta la puerta.
+              En Memento armás una caja de regalo a medida: vos elegís qué va adentro, nosotros la preparamos y la
+              llevamos a domicilio en Cañada de Gómez.
             </p>
             <div className="animate-fade-in-up mt-8 flex flex-wrap items-center gap-3 [animation-delay:240ms]">
               <Link
@@ -100,9 +105,15 @@ export default async function HomePage() {
               </Link>
             </div>
             <ul className="animate-fade-in-up mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted [animation-delay:320ms]">
-              <li>✓ Armada a mano</li>
-              <li>✓ Entrega a domicilio</li>
-              <li>✓ Transferencia o efectivo</li>
+              <li>
+                <span aria-hidden="true">✓ </span>Armada a tu gusto
+              </li>
+              <li>
+                <span aria-hidden="true">✓ </span>Entrega a domicilio
+              </li>
+              <li>
+                <span aria-hidden="true">✓ </span>Transferencia o efectivo
+              </li>
             </ul>
           </div>
 
@@ -112,27 +123,29 @@ export default async function HomePage() {
               <>
                 <img
                   src={fotos[0].imagen}
-                  alt={fotos[0].nombre}
+                  alt={`${fotos[0].nombre} (imagen ilustrativa)`}
                   className="absolute left-0 top-6 h-60 w-48 rotate-[-6deg] rounded-3xl object-cover shadow-2xl shadow-black/40 sm:h-72 sm:w-56"
                 />
                 {fotos[1] && (
                   <img
                     src={fotos[1].imagen}
-                    alt={fotos[1].nombre}
+                    alt={`${fotos[1].nombre} (imagen ilustrativa)`}
                     className="absolute right-0 top-0 h-56 w-44 rotate-[5deg] rounded-3xl object-cover shadow-2xl shadow-black/40 sm:h-64 sm:w-52"
                   />
                 )}
                 {fotos[2] && (
                   <img
                     src={fotos[2].imagen}
-                    alt={fotos[2].nombre}
+                    alt={`${fotos[2].nombre} (imagen ilustrativa)`}
                     className="animate-float absolute bottom-0 left-1/2 h-52 w-44 -translate-x-1/2 rounded-3xl object-cover shadow-2xl shadow-black/50 ring-4 ring-background sm:h-60 sm:w-52"
                   />
                 )}
               </>
             ) : (
               <div className="flex h-full items-center justify-center rounded-[2rem] bg-linear-to-br from-brand/30 via-brand/10 to-transparent">
-                <span className="animate-float text-8xl">🎁</span>
+                <span aria-hidden="true" className="animate-float text-8xl">
+                  🎁
+                </span>
               </div>
             )}
           </div>
@@ -149,7 +162,9 @@ export default async function HomePage() {
           <div className="mt-14 grid gap-10 sm:grid-cols-3">
             {PASOS.map((paso) => (
               <div key={paso.numero} className="text-center sm:text-left">
-                <span className="text-5xl font-semibold text-brand/40">{paso.numero}</span>
+                <span aria-hidden="true" className="text-5xl font-semibold text-brand">
+                  {paso.numero}
+                </span>
                 <h3 className="mt-3 text-xl font-semibold">{paso.titulo}</h3>
                 <p className="mt-2 text-muted">{paso.texto}</p>
               </div>
@@ -174,7 +189,10 @@ export default async function HomePage() {
           <div className="grid gap-4">
             {VALORES.map((valor) => (
               <div key={valor.titulo} className="flex gap-4 rounded-2xl border border-border bg-surface p-5">
-                <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-brand/15 text-2xl">
+                <span
+                  aria-hidden="true"
+                  className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-brand/15 text-2xl"
+                >
                   {valor.icono}
                 </span>
                 <div>
@@ -197,6 +215,7 @@ export default async function HomePage() {
             </div>
             {precioDesde !== null && <p className="text-muted">Desde {formatoMoneda(precioDesde)}</p>}
           </div>
+          <p className="mt-2 text-xs text-muted">Imágenes ilustrativas: la presentación final puede variar.</p>
           <div className="mt-10 grid gap-6 sm:grid-cols-3">
             {cajas.map((caja) => (
               <Link
@@ -208,11 +227,14 @@ export default async function HomePage() {
                   {caja.imagen ? (
                     <img
                       src={caja.imagen}
-                      alt={caja.nombre}
+                      alt={`${caja.nombre} (imagen ilustrativa)`}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center bg-linear-to-br from-brand/30 to-transparent text-6xl">
+                    <div
+                      aria-hidden="true"
+                      className="flex h-full items-center justify-center bg-linear-to-br from-brand/30 to-transparent text-6xl"
+                    >
                       🎁
                     </div>
                   )}
@@ -227,7 +249,7 @@ export default async function HomePage() {
                     <p className="mt-3 text-xs text-muted">Hasta {caja.capacidad} productos</p>
                   )}
                   <p className="mt-5 text-sm font-medium text-brand transition-transform group-hover:translate-x-1">
-                    Armar esta caja →
+                    Armar esta caja <span aria-hidden="true">→</span>
                   </p>
                 </div>
               </Link>
@@ -238,14 +260,19 @@ export default async function HomePage() {
 
       {/* Suscripción */}
       <section className="mx-auto max-w-6xl px-6 pb-24">
-        <div className="relative overflow-hidden rounded-[2rem] bg-linear-to-br from-brand to-[#c4572f] px-8 py-14 text-brand-foreground sm:px-14">
-          <div className="pointer-events-none absolute -right-10 -top-10 text-[10rem] opacity-15">🎁</div>
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] opacity-80">Suscripción</p>
+        <div className="relative overflow-hidden rounded-[2rem] bg-brand px-8 py-14 text-brand-foreground sm:px-14">
+          <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 text-[10rem] opacity-15">
+            🎁
+          </div>
+          <p className="text-xs font-semibold uppercase tracking-[0.25em]">Suscripción</p>
           <h2 className="mt-3 max-w-xl text-3xl font-semibold tracking-tight sm:text-4xl">
             Que la sorpresa llegue sola.
           </h2>
-          <p className="mt-4 max-w-lg opacity-90">
-            Recibí una caja cada semana, cada 15 días o cada mes. La pausás o la cancelás cuando quieras.
+          <p className="mt-4 max-w-lg">
+            {frecuencias.length > 0
+              ? `Recibí una caja ${frecuencias.map((f) => f.etiqueta.toLowerCase()).join(", ").replace(/, ([^,]*)$/, " o $1")}.`
+              : "Recibí una caja sorpresa cada cierto tiempo."}{" "}
+            La pausás o la cancelás cuando quieras.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-5">
             <Link
@@ -255,7 +282,7 @@ export default async function HomePage() {
               Suscribirme
             </Link>
             {suscripcionDesde !== null && (
-              <span className="text-sm font-medium opacity-90">Desde {formatoMoneda(suscripcionDesde)} por entrega</span>
+              <span className="text-sm font-semibold">Desde {formatoMoneda(suscripcionDesde)} por entrega</span>
             )}
           </div>
         </div>
@@ -269,7 +296,9 @@ export default async function HomePage() {
             <details key={item.pregunta} className="group px-6 py-5">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium">
                 {item.pregunta}
-                <span className="text-xl text-brand transition-transform group-open:rotate-45">+</span>
+                <span aria-hidden="true" className="text-xl text-brand transition-transform group-open:rotate-45">
+                  +
+                </span>
               </summary>
               <p className="mt-3 text-sm text-muted">{item.respuesta}</p>
             </details>
@@ -289,13 +318,6 @@ export default async function HomePage() {
           </Link>
         </div>
       </section>
-
-      <footer className="border-t border-border">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-6 py-8 text-sm text-muted sm:flex-row">
-          <span className="font-semibold tracking-wide text-foreground">MEMENTO</span>
-          <span>Cajas de regalo en Cañada de Gómez</span>
-        </div>
-      </footer>
     </div>
   );
 }

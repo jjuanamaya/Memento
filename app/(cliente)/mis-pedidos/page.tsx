@@ -78,8 +78,8 @@ export default async function MisPedidosPage() {
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-muted">
-                  {new Date(pedido.creado_en).toLocaleDateString("es-AR")} · ${pedido.total} ·{" "}
-                  {ETIQUETA_METODO[pedido.metodo_pago]}
+                  Pedido #{pedido.id.slice(0, 8)} · {new Date(pedido.creado_en).toLocaleDateString("es-AR")} · $
+                  {pedido.total} · {ETIQUETA_METODO[pedido.metodo_pago]}
                 </p>
               </div>
             );

@@ -67,6 +67,7 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
   const [comprobante, setComprobante] = useState<File | null>(null);
   const [pedidoId, setPedidoId] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [acepta, setAcepta] = useState(false);
   const [error, setError] = useState("");
 
   const items = useMemo(
@@ -206,7 +207,7 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
         ? !!tematica
         : paso === "productos"
           ? true
-          : !!metodoPago && !!direccion && !enviando;
+          : !!metodoPago && !!direccion.trim() && acepta && !enviando;
 
   function continuar() {
     if (paso === "caja") irA("tematica");
@@ -224,7 +225,7 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
     .join(" · ");
 
   return (
-    <div className="mx-auto max-w-4xl px-6 pb-36 pt-10">
+    <div className="mx-auto max-w-4xl px-6 pb-10 pt-10">
       {/* Encabezado del paso */}
       <div key={paso} className="text-center">
         <p className="animate-fade-in-up text-xs font-semibold uppercase tracking-[0.2em] text-brand">
@@ -239,13 +240,21 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
       </div>
 
       {/* Progreso */}
-      <ol className="mx-auto mt-10 flex max-w-xl items-start">
+      <ol aria-label="Pasos del pedido" className="mx-auto mt-10 flex max-w-xl items-start">
         {PASOS.map((p, i) => {
           const completado = i < indicePaso;
           const actual = i === indicePaso;
           return (
-            <li key={p.id} className={`flex items-start ${i < PASOS.length - 1 ? "flex-1" : ""}`}>
-              <div className="flex flex-col items-center gap-2">
+            <li
+              key={p.id}
+              aria-current={actual ? "step" : undefined}
+              className={`flex items-start ${i < PASOS.length - 1 ? "flex-1" : ""}`}
+            >
+              <span className="sr-only">
+                {p.label}
+                {completado ? " (completado)" : actual ? " (paso actual)" : ""}
+              </span>
+              <div aria-hidden="true" className="flex flex-col items-center gap-2">
                 <span
                   className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-all duration-500 ${
                     completado
@@ -266,7 +275,7 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
                 </span>
               </div>
               {i < PASOS.length - 1 && (
-                <div className="mx-2 mt-[17px] h-0.5 flex-1 overflow-hidden rounded-full bg-surface">
+                <div aria-hidden="true" className="mx-2 mt-[17px] h-0.5 flex-1 overflow-hidden rounded-full bg-surface">
                   <div
                     className="h-full bg-brand transition-all duration-700"
                     style={{ width: completado ? "100%" : "0%" }}
@@ -286,6 +295,8 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
             return (
               <button
                 key={c.id}
+                type="button"
+                aria-pressed={elegida}
                 onClick={() => setCaja(c)}
                 style={{ animationDelay: `${150 + i * 80}ms` }}
                 className={`animate-fade-in-up group relative overflow-hidden rounded-3xl border text-left transition-all duration-300 hover:-translate-y-1 ${
@@ -302,7 +313,10 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-brand/30 via-brand/10 to-transparent">
+                    <div
+                      aria-hidden="true"
+                      className="flex h-full w-full items-center justify-center bg-linear-to-br from-brand/30 via-brand/10 to-transparent"
+                    >
                       <span className="text-6xl transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-110">
                         🎁
                       </span>
@@ -314,7 +328,10 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
                     </span>
                   )}
                   {elegida && (
-                    <span className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-brand text-sm font-bold text-brand-foreground shadow-lg">
+                    <span
+                      aria-hidden="true"
+                      className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-brand text-sm font-bold text-brand-foreground shadow-lg"
+                    >
                       ✓
                     </span>
                   )}
@@ -327,6 +344,9 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
               </button>
             );
           })}
+          <p className="text-center text-xs text-muted sm:col-span-3">
+            Imágenes ilustrativas: la presentación final puede variar.
+          </p>
         </div>
       )}
 
@@ -338,6 +358,8 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
             return (
               <button
                 key={t.id}
+                type="button"
+                aria-pressed={elegida}
                 onClick={() => setTematica(t)}
                 style={{ animationDelay: `${150 + i * 70}ms` }}
                 className={`animate-fade-in-up group relative overflow-hidden rounded-3xl border text-left transition-all duration-300 hover:-translate-y-1 ${
@@ -354,12 +376,18 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-brand/25 via-brand/5 to-transparent">
+                    <div
+                      aria-hidden="true"
+                      className="flex h-full w-full items-center justify-center bg-linear-to-br from-brand/25 via-brand/5 to-transparent"
+                    >
                       <span className="text-5xl transition-transform duration-500 group-hover:scale-110">✨</span>
                     </div>
                   )}
                   {elegida && (
-                    <span className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-brand text-sm font-bold text-brand-foreground shadow-lg">
+                    <span
+                      aria-hidden="true"
+                      className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-brand text-sm font-bold text-brand-foreground shadow-lg"
+                    >
                       ✓
                     </span>
                   )}
@@ -403,7 +431,9 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
             return (
               <div key={categoria.id} className="mt-10">
                 <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted">
-                  <span className="text-lg">{categoria.icono}</span>
+                  <span aria-hidden="true" className="text-lg">
+                    {categoria.icono}
+                  </span>
                   {categoria.label}
                 </h3>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -436,7 +466,10 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
                           >
                             −
                           </button>
-                          <span className="w-5 text-center text-sm font-semibold">{cantidad}</span>
+                          <span aria-live="polite" className="w-5 text-center text-sm font-semibold">
+                            <span className="sr-only">Cantidad: </span>
+                            {cantidad}
+                          </span>
                           <button
                             onClick={() => cambiarCantidad(producto, 1)}
                             disabled={sinStock || cantidad >= producto.stockActual || capacidadRestante <= 0}
@@ -461,7 +494,10 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
         <div className="animate-fade-in-up mx-auto mt-10 max-w-2xl [animation-delay:150ms]">
           <div className="overflow-hidden rounded-3xl border border-border bg-surface">
             <div className="flex items-center gap-4 border-b border-border p-5">
-              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-brand/30 to-transparent text-2xl">
+              <div
+                aria-hidden="true"
+                className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-brand/30 to-transparent text-2xl"
+              >
                 {caja?.imagen ? <img src={caja.imagen} alt="" className="h-full w-full object-cover" /> : "🎁"}
               </div>
               <div className="min-w-0 flex-1">
@@ -499,8 +535,14 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
           </div>
 
           <div className="mt-8">
-            <label className="text-sm font-medium">📍 Dirección de entrega en Cañada de Gómez</label>
+            <label htmlFor="pedido-direccion" className="text-sm font-medium">
+              <span aria-hidden="true">📍 </span>Dirección de entrega en Cañada de Gómez
+            </label>
             <input
+              id="pedido-direccion"
+              required
+              autoComplete="street-address"
+              maxLength={200}
               value={direccion}
               onChange={(e) => setDireccion(e.target.value)}
               placeholder="Calle, número y referencia"
@@ -510,8 +552,11 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
 
           {zonas.length > 0 && (
             <div className="mt-6">
-              <label className="text-sm font-medium">🚚 Zona de reparto</label>
+              <label htmlFor="pedido-zona" className="text-sm font-medium">
+                <span aria-hidden="true">🚚 </span>Zona de reparto
+              </label>
               <select
+                id="pedido-zona"
                 value={zona?.id ?? ""}
                 onChange={(e) => setZona(zonas.find((z) => z.id === e.target.value) ?? null)}
                 className={INPUT}
@@ -529,8 +574,10 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
           )}
 
           <div className="mt-6">
-            <p className="text-sm font-medium">Método de pago</p>
-            <div className="mt-2 grid grid-cols-2 gap-3">
+            <p id="pedido-metodo" className="text-sm font-medium">
+              Método de pago
+            </p>
+            <div role="group" aria-labelledby="pedido-metodo" className="mt-2 grid grid-cols-2 gap-3">
               {(
                 [
                   { id: "transferencia", icono: "🏦", label: "Transferencia" },
@@ -539,6 +586,8 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
               ).map((m) => (
                 <button
                   key={m.id}
+                  type="button"
+                  aria-pressed={metodoPago === m.id}
                   onClick={() => setMetodoPago(m.id)}
                   className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 ${
                     metodoPago === m.id
@@ -546,7 +595,9 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
                       : "border-border hover:border-brand/40"
                   }`}
                 >
-                  <span className="text-2xl">{m.icono}</span>
+                  <span aria-hidden="true" className="text-2xl">
+                    {m.icono}
+                  </span>
                   <span className="text-sm font-medium">{m.label}</span>
                 </button>
               ))}
@@ -555,27 +606,72 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
 
           {metodoPago === "transferencia" && (
             <div className="mt-6 rounded-2xl border border-dashed border-border p-5">
-              <label className="text-sm font-medium">Comprobante de transferencia (opcional)</label>
-              <p className="mt-1 text-xs text-muted">
-                Podés subirlo ahora o mandarlo después — igual te vamos a contactar para coordinar.
+              <label htmlFor="pedido-comprobante" className="text-sm font-medium">
+                Comprobante de transferencia (opcional)
+              </label>
+              <p id="pedido-comprobante-ayuda" className="mt-1 text-xs text-muted">
+                Imagen o PDF de hasta 5 MB. Podés subirlo ahora o mandarlo después — igual te vamos a contactar para
+                coordinar.
               </p>
               <input
+                id="pedido-comprobante"
+                aria-describedby="pedido-comprobante-ayuda"
                 type="file"
-                accept="image/*,application/pdf"
-                onChange={(e) => setComprobante(e.target.files?.[0] ?? null)}
+                accept="image/jpeg,image/png,image/webp,application/pdf"
+                onChange={(e) => {
+                  const archivo = e.target.files?.[0] ?? null;
+                  const tipoValido =
+                    archivo && ["image/jpeg", "image/png", "image/webp", "application/pdf"].includes(archivo.type);
+                  if (archivo && (!tipoValido || archivo.size > 5 * 1024 * 1024)) {
+                    e.target.value = "";
+                    setComprobante(null);
+                    setError("El comprobante tiene que ser una imagen (JPG, PNG o WEBP) o un PDF de hasta 5 MB.");
+                    return;
+                  }
+                  setError("");
+                  setComprobante(archivo);
+                }}
                 className="mt-3 w-full text-sm text-muted file:mr-3 file:rounded-full file:border-0 file:bg-brand file:px-4 file:py-2 file:text-sm file:font-medium file:text-brand-foreground"
               />
             </div>
           )}
+
+          <div className="mt-8 flex items-start gap-3">
+            <input
+              id="pedido-acepta"
+              type="checkbox"
+              required
+              checked={acepta}
+              onChange={(e) => setAcepta(e.target.checked)}
+              className="mt-1 h-4 w-4 flex-shrink-0 accent-[var(--brand)]"
+            />
+            <label htmlFor="pedido-acepta" className="text-sm text-muted">
+              Leí y acepto los{" "}
+              <Link href="/terminos" target="_blank" className="text-brand underline underline-offset-2">
+                Términos y condiciones
+              </Link>
+              , la{" "}
+              <Link href="/cambios-y-devoluciones" target="_blank" className="text-brand underline underline-offset-2">
+                Política de cambios y devoluciones
+              </Link>{" "}
+              y la{" "}
+              <Link href="/privacidad" target="_blank" className="text-brand underline underline-offset-2">
+                Política de privacidad
+              </Link>
+              .
+            </label>
+          </div>
         </div>
       )}
 
-      {/* Barra inferior fija: resumen + navegación */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/90 backdrop-blur">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-6 py-4">
+      {/* Barra inferior: resumen + navegación (se queda pegada abajo mientras hay contenido) */}
+      <div className="sticky bottom-4 z-30 mt-10 rounded-2xl border border-border bg-background/90 shadow-xl shadow-black/30 backdrop-blur">
+        <div className="flex items-center justify-between gap-4 px-5 py-4">
           <div className="min-w-0">
             {error ? (
-              <p className="text-sm text-red-400">{error}</p>
+              <p role="alert" className="text-sm text-red-400">
+                {error}
+              </p>
             ) : (
               <>
                 <p className="truncate text-xs text-muted">{resumenCorto || "Todavía no elegiste nada"}</p>
@@ -586,14 +682,25 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
           <div className="flex flex-shrink-0 items-center gap-2">
             {indicePaso > 0 && (
               <button
+                type="button"
                 onClick={() => irA(PASOS[indicePaso - 1].id)}
                 className="rounded-full px-4 py-3 text-sm text-muted transition-colors hover:text-foreground"
               >
                 Volver
               </button>
             )}
-            <button disabled={!puedeContinuar} onClick={continuar} className={BOTON_PRIMARIO}>
-              {paso === "resumen" ? (enviando ? "Confirmando..." : "Confirmar pedido") : "Continuar →"}
+            <button type="button" disabled={!puedeContinuar} onClick={continuar} className={BOTON_PRIMARIO}>
+              {paso === "resumen" ? (
+                enviando ? (
+                  "Confirmando..."
+                ) : (
+                  "Confirmar pedido"
+                )
+              ) : (
+                <>
+                  Continuar <span aria-hidden="true">→</span>
+                </>
+              )}
             </button>
           </div>
         </div>

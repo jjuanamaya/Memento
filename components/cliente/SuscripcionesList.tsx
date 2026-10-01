@@ -71,7 +71,9 @@ export function SuscripcionesList({ suscripcionesIniciales }: { suscripcionesIni
               {ETIQUETA_ESTADO_SUSCRIPCION[s.estado]}
             </span>
           </div>
-          <p className="mt-1 text-sm text-muted">{FRECUENCIA_LABEL[s.frecuenciaDias] ?? `Cada ${s.frecuenciaDias} días`} · ${s.cajaPrecio}</p>
+          <p className="mt-1 text-sm text-muted">
+            {FRECUENCIA_LABEL[s.frecuenciaDias] ?? `Cada ${s.frecuenciaDias} días`} · ${Math.round(s.precio).toLocaleString("es-AR")}
+          </p>
           <p className="mt-2 text-sm text-muted">Entre: {s.tematicas.join(", ")}</p>
           {s.proximaEntrega && s.estado === "activa" && (
             <p className="mt-1 text-xs text-muted">

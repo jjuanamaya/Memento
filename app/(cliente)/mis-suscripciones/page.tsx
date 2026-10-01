@@ -13,7 +13,7 @@ export default async function MisSuscripcionesPage() {
 
   const { data } = await supabase
     .from("suscripciones")
-    .select("id, frecuencia_dias, proxima_entrega, estado, cajas(nombre, precio), suscripcion_tematicas(tematicas(nombre))")
+    .select("id, frecuencia_dias, precio, proxima_entrega, estado, cajas(nombre), suscripcion_tematicas(tematicas(nombre))")
     .eq("usuario_id", user.id)
     .order("creado_en", { ascending: false });
 
@@ -21,9 +21,10 @@ export default async function MisSuscripcionesPage() {
     const s = row as unknown as {
       id: string;
       frecuencia_dias: number;
+      precio: number;
       proxima_entrega: string | null;
       estado: EstadoSuscripcion;
-      cajas: { nombre: string; precio: number } | null;
+      cajas: { nombre: string } | null;
       suscripcion_tematicas: { tematicas: { nombre: string } | null }[];
     };
 
@@ -31,7 +32,7 @@ export default async function MisSuscripcionesPage() {
       id: s.id,
       cajaId: "",
       cajaNombre: s.cajas?.nombre ?? "Caja",
-      cajaPrecio: Number(s.cajas?.precio ?? 0),
+      precio: Number(s.precio ?? 0),
       frecuenciaDias: s.frecuencia_dias,
       proximaEntrega: s.proxima_entrega,
       estado: s.estado,

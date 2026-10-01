@@ -8,7 +8,7 @@ export default async function AdminSuscripcionesPage() {
   const { data, error } = await supabase
     .from("suscripciones")
     .select(
-      "id, frecuencia_dias, proxima_entrega, estado, cajas(nombre), perfiles(nombre, apellido), suscripcion_tematicas(tematicas(nombre))"
+      "id, frecuencia_dias, precio, proxima_entrega, estado, cajas(nombre), perfiles(nombre, apellido), suscripcion_tematicas(tematicas(nombre))"
     )
     .order("creado_en", { ascending: false });
 
@@ -16,6 +16,7 @@ export default async function AdminSuscripcionesPage() {
     const s = row as unknown as {
       id: string;
       frecuencia_dias: number;
+      precio: number;
       proxima_entrega: string | null;
       estado: EstadoSuscripcion;
       cajas: { nombre: string } | null;
@@ -27,6 +28,7 @@ export default async function AdminSuscripcionesPage() {
       id: s.id,
       cliente: [s.perfiles?.nombre, s.perfiles?.apellido].filter(Boolean).join(" ") || "—",
       cajaNombre: s.cajas?.nombre ?? "—",
+      precio: Number(s.precio ?? 0),
       frecuenciaDias: s.frecuencia_dias,
       proximaEntrega: s.proxima_entrega,
       estado: s.estado,

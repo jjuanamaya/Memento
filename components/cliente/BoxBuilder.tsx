@@ -197,6 +197,7 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
                     : "border-muted/70 hover:border-brand/40 hover:bg-surface"
                 }`}
               >
+                {c.imagen && <img src={c.imagen} alt="" className="mb-4 h-28 w-full rounded-xl object-cover" />}
                 <p className="font-medium">{c.nombre}</p>
                 <p className="mt-1 text-sm text-muted">{c.descripcion}</p>
                 <p className="mt-4 font-semibold text-brand">${c.precio}</p>
@@ -230,6 +231,7 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
                     : "border-muted/70 hover:border-brand/40 hover:bg-surface"
                 }`}
               >
+                {t.imagen && <img src={t.imagen} alt="" className="mb-4 h-28 w-full rounded-xl object-cover" />}
                 <p className="font-medium">{t.nombre}</p>
                 <p className="mt-1 text-sm text-muted">{t.descripcion}</p>
               </button>

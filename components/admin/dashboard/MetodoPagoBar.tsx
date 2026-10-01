@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { CHART_COLORS } from "@/lib/chartColors";
 
 interface MetodoPagoBarProps {
@@ -6,6 +9,18 @@ interface MetodoPagoBarProps {
 }
 
 export function MetodoPagoBar({ transferencia, efectivo }: MetodoPagoBarProps) {
+  const [visible, setVisible] = useState(false);
+  const [animar, setAnimar] = useState(true);
+
+  useEffect(() => {
+    setAnimar(!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    const frame1 = requestAnimationFrame(() => {
+      const frame2 = requestAnimationFrame(() => setVisible(true));
+      return () => cancelAnimationFrame(frame2);
+    });
+    return () => cancelAnimationFrame(frame1);
+  }, []);
+
   const total = transferencia + efectivo;
 
   if (total === 0) {
@@ -14,6 +29,8 @@ export function MetodoPagoBar({ transferencia, efectivo }: MetodoPagoBarProps) {
 
   const pctTransferencia = Math.round((transferencia / total) * 100);
   const pctEfectivo = 100 - pctTransferencia;
+  const escala = animar ? (visible ? 1 : 0) : 1;
+  const transicion = animar ? "width 1800ms cubic-bezier(0.22, 1, 0.36, 1)" : "none";
 
   return (
     <div>
@@ -21,12 +38,15 @@ export function MetodoPagoBar({ transferencia, efectivo }: MetodoPagoBarProps) {
         {transferencia > 0 && (
           <div
             className="h-full"
-            style={{ width: `${pctTransferencia}%`, backgroundColor: CHART_COLORS.transferencia }}
+            style={{ width: `${pctTransferencia * escala}%`, backgroundColor: CHART_COLORS.transferencia, transition: transicion }}
           />
         )}
         {transferencia > 0 && efectivo > 0 && <div className="h-full w-[2px] bg-background" />}
         {efectivo > 0 && (
-          <div className="h-full" style={{ width: `${pctEfectivo}%`, backgroundColor: CHART_COLORS.efectivo }} />
+          <div
+            className="h-full"
+            style={{ width: `${pctEfectivo * escala}%`, backgroundColor: CHART_COLORS.efectivo, transition: transicion }}
+          />
         )}
       </div>
 

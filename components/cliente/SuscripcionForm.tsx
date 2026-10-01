@@ -2,26 +2,25 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { Caja, MetodoPago, Tematica, ZonaReparto } from "@/lib/types";
-
-const FRECUENCIAS = [
-  { dias: 7, label: "Cada semana" },
-  { dias: 15, label: "Cada 15 días" },
-  { dias: 30, label: "Cada mes" },
-];
+import type { Caja, FrecuenciaSuscripcion, MetodoPago, Tematica, ZonaReparto } from "@/lib/types";
 
 const MIN_TEMATICAS = 2;
+
+function formatoMoneda(valor: number) {
+  return `$${Math.round(valor).toLocaleString("es-AR")}`;
+}
 
 interface SuscripcionFormProps {
   cajas: Caja[];
   tematicas: Tematica[];
   zonas: ZonaReparto[];
+  frecuencias: FrecuenciaSuscripcion[];
 }
 
-export function SuscripcionForm({ cajas, tematicas, zonas }: SuscripcionFormProps) {
+export function SuscripcionForm({ cajas, tematicas, zonas, frecuencias }: SuscripcionFormProps) {
   const [caja, setCaja] = useState<Caja | null>(null);
   const [tematicasElegidas, setTematicasElegidas] = useState<Tematica[]>([]);
-  const [frecuenciaDias, setFrecuenciaDias] = useState(30);
+  const [frecuenciaDias, setFrecuenciaDias] = useState(frecuencias[0]?.dias ?? 30);
   const [direccion, setDireccion] = useState("");
   const [zona, setZona] = useState<ZonaReparto | null>(null);
   const [metodoPago, setMetodoPago] = useState<MetodoPago | null>(null);
@@ -57,12 +56,18 @@ export function SuscripcionForm({ cajas, tematicas, zonas }: SuscripcionFormProp
 
     if (errorSuscripcion) {
       console.error("Error al crear suscripción:", errorSuscripcion);
-      setError("No pudimos crear la suscripción. Probá de nuevo.");
+      const mensajeConocido =
+        errorSuscripcion.message?.includes("sesión") ||
+        errorSuscripcion.message?.includes("temáticas") ||
+        errorSuscripcion.message?.includes("frecuencia");
+      setError(mensajeConocido ? errorSuscripcion.message : "No pudimos crear la suscripción. Probá de nuevo.");
       return;
     }
 
     setCreada(true);
   }
+
+  const frecuenciaElegida = frecuencias.find((f) => f.dias === frecuenciaDias) ?? null;
 
   if (creada) {
     return (
@@ -72,8 +77,10 @@ export function SuscripcionForm({ cajas, tematicas, zonas }: SuscripcionFormProp
           ¡Ya estás suscripto!
         </h1>
         <p className="animate-fade-in-up mt-4 text-muted [animation-delay:140ms]">
-          Cada {frecuenciaDias === 7 ? "semana" : frecuenciaDias === 15 ? "15 días" : "mes"} te va a llegar una
-          sorpresa entre las temáticas que elegiste. Te contactamos antes de cada entrega para coordinar.
+          {frecuenciaElegida
+            ? `${frecuenciaElegida.etiqueta} (${formatoMoneda(frecuenciaElegida.precio)}) te va a llegar una sorpresa entre las temáticas que elegiste.`
+            : "En cada entrega te va a llegar una sorpresa entre las temáticas que elegiste."}{" "}
+          Te contactamos antes de cada entrega para coordinar.
         </p>
         <a
           href="/mis-suscripciones"
@@ -106,9 +113,12 @@ export function SuscripcionForm({ cajas, tematicas, zonas }: SuscripcionFormProp
                   : "border-muted/70 hover:border-brand/40 hover:bg-surface"
               }`}
             >
+              {c.imagen && (
+                <img src={c.imagen} alt="" className="mb-3 h-28 w-full rounded-xl object-cover" />
+              )}
               <p className="font-medium">{c.nombre}</p>
               <p className="mt-1 text-sm text-muted">{c.descripcion}</p>
-              <p className="mt-3 font-semibold text-brand">${c.precio}</p>
+              {c.capacidad > 0 && <p className="mt-3 text-sm text-muted">Hasta {c.capacidad} productos</p>}
             </button>
           ))}
         </div>
@@ -129,9 +139,14 @@ export function SuscripcionForm({ cajas, tematicas, zonas }: SuscripcionFormProp
                   elegida ? "border-brand bg-surface" : "border-muted/70 hover:border-brand/40"
                 }`}
               >
-                <div>
-                  <p className="font-medium">{t.nombre}</p>
-                  <p className="mt-1 text-sm text-muted">{t.descripcion}</p>
+                <div className="flex items-start gap-3">
+                  {t.imagen && (
+                    <img src={t.imagen} alt="" className="h-14 w-14 flex-shrink-0 rounded-lg object-cover" />
+                  )}
+                  <div>
+                    <p className="font-medium">{t.nombre}</p>
+                    <p className="mt-1 text-sm text-muted">{t.descripcion}</p>
+                  </div>
                 </div>
                 <span
                   className={`mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border text-xs ${
@@ -147,17 +162,19 @@ export function SuscripcionForm({ cajas, tematicas, zonas }: SuscripcionFormProp
       </div>
 
       <div className="mt-8">
-        <h2 className="text-sm font-medium uppercase tracking-wide text-muted">Frecuencia</h2>
-        <div className="mt-3 grid grid-cols-3 gap-3">
-          {FRECUENCIAS.map((f) => (
+        <h2 className="text-sm font-medium uppercase tracking-wide text-muted">Frecuencia de envío</h2>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          {frecuencias.map((f) => (
             <button
               key={f.dias}
               onClick={() => setFrecuenciaDias(f.dias)}
-              className={`rounded-xl border p-3 text-center text-sm transition-all ${
+              className={`rounded-xl border p-4 text-center transition-all ${
                 frecuenciaDias === f.dias ? "border-brand bg-surface" : "border-muted/70 hover:border-brand/40"
               }`}
             >
-              {f.label}
+              <p className="text-sm font-medium">{f.etiqueta}</p>
+              <p className="mt-1 text-sm font-semibold text-brand">{formatoMoneda(f.precio)}</p>
+              <p className="text-xs text-muted">por entrega</p>
             </button>
           ))}
         </div>
@@ -214,6 +231,13 @@ export function SuscripcionForm({ cajas, tematicas, zonas }: SuscripcionFormProp
           </button>
         </div>
       </div>
+
+      {frecuenciaElegida && (
+        <div className="mt-6 flex items-center justify-between rounded-xl border border-border bg-surface px-5 py-4">
+          <span className="text-sm text-muted">{frecuenciaElegida.etiqueta} — total por entrega</span>
+          <span className="text-lg font-semibold text-brand">{formatoMoneda(frecuenciaElegida.precio)}</span>
+        </div>
+      )}
 
       {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
 

@@ -16,6 +16,7 @@ export interface Caja {
   precio: number;
   capacidad: number;
   imagen: string;
+  activa: boolean;
 }
 
 export interface Tematica {
@@ -23,6 +24,16 @@ export interface Tematica {
   nombre: string;
   descripcion: string;
   imagen: string;
+  activa: boolean;
+}
+
+export interface FrecuenciaSuscripcion {
+  id: string;
+  dias: number;
+  etiqueta: string;
+  precio: number;
+  activa: boolean;
+  orden: number;
 }
 
 export interface Producto {
@@ -67,7 +78,7 @@ export interface Suscripcion {
   id: string;
   cajaId: string;
   cajaNombre: string;
-  cajaPrecio: number;
+  precio: number;
   frecuenciaDias: number;
   proximaEntrega: string | null;
   estado: EstadoSuscripcion;

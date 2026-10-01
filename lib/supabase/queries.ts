@@ -3,6 +3,7 @@ import { ESTADOS_PEDIDO } from "@/lib/types";
 import type {
   Caja,
   EstadoPedido,
+  FrecuenciaSuscripcion,
   MovimientoStock,
   Producto,
   Proveedor,
@@ -12,13 +13,12 @@ import type {
   ZonaReparto,
 } from "@/lib/types";
 
-export async function fetchCajas(): Promise<Caja[]> {
+export async function fetchCajas(soloActivas = true): Promise<Caja[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("cajas")
-    .select("*")
-    .eq("activa", true)
-    .order("precio");
+  let query = supabase.from("cajas").select("*").order("precio");
+  if (soloActivas) query = query.eq("activa", true);
+
+  const { data, error } = await query;
 
   if (error) throw error;
 
@@ -29,16 +29,16 @@ export async function fetchCajas(): Promise<Caja[]> {
     precio: Number(c.precio),
     capacidad: c.capacidad ?? 0,
     imagen: c.imagen_url ?? "",
+    activa: c.activa,
   }));
 }
 
-export async function fetchTematicas(): Promise<Tematica[]> {
+export async function fetchTematicas(soloActivas = true): Promise<Tematica[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("tematicas")
-    .select("*")
-    .eq("activa", true)
-    .order("nombre");
+  let query = supabase.from("tematicas").select("*").order("nombre");
+  if (soloActivas) query = query.eq("activa", true);
+
+  const { data, error } = await query;
 
   if (error) throw error;
 
@@ -47,6 +47,26 @@ export async function fetchTematicas(): Promise<Tematica[]> {
     nombre: t.nombre,
     descripcion: t.descripcion ?? "",
     imagen: t.imagen_url ?? "",
+    activa: t.activa,
+  }));
+}
+
+export async function fetchFrecuenciasSuscripcion(soloActivas = true): Promise<FrecuenciaSuscripcion[]> {
+  const supabase = await createClient();
+  let query = supabase.from("frecuencias_suscripcion").select("*").order("orden");
+  if (soloActivas) query = query.eq("activa", true);
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+
+  return (data ?? []).map((f) => ({
+    id: f.id,
+    dias: f.dias,
+    etiqueta: f.etiqueta,
+    precio: Number(f.precio),
+    activa: f.activa,
+    orden: f.orden,
   }));
 }
 

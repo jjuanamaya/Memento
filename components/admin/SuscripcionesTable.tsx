@@ -9,10 +9,15 @@ export interface SuscripcionAdminRow {
   id: string;
   cliente: string;
   cajaNombre: string;
+  precio: number;
   frecuenciaDias: number;
   proximaEntrega: string | null;
   estado: EstadoSuscripcion;
   tematicas: string[];
+}
+
+function formatoMoneda(valor: number) {
+  return `$${Math.round(valor).toLocaleString("es-AR")}`;
 }
 
 const ESTILO_ESTADO: Record<EstadoSuscripcion, string> = {
@@ -58,6 +63,7 @@ export function SuscripcionesTable({ suscripcionesIniciales }: { suscripcionesIn
             <th className="px-4 py-3">Caja</th>
             <th className="px-4 py-3">Temáticas</th>
             <th className="px-4 py-3">Frecuencia</th>
+            <th className="px-4 py-3">Monto</th>
             <th className="px-4 py-3">Próxima entrega</th>
             <th className="px-4 py-3">Estado</th>
             <th className="px-4 py-3"></th>
@@ -70,6 +76,7 @@ export function SuscripcionesTable({ suscripcionesIniciales }: { suscripcionesIn
               <td className="px-4 py-3">{s.cajaNombre}</td>
               <td className="px-4 py-3 text-muted">{s.tematicas.join(", ")}</td>
               <td className="px-4 py-3 text-muted">cada {s.frecuenciaDias} días</td>
+              <td className="px-4 py-3 font-medium">{formatoMoneda(s.precio)}</td>
               <td className="px-4 py-3 text-muted">
                 {s.proximaEntrega ? new Date(s.proximaEntrega).toLocaleDateString("es-AR") : "—"}
               </td>

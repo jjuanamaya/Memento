@@ -31,10 +31,17 @@ export default async function HomePage() {
             <div
               key={tematica.id}
               style={{ animationDelay: `${i * 60}ms` }}
-              className="animate-fade-in-up rounded-2xl border border-border bg-surface p-4 text-center transition-all duration-300 hover:-translate-y-1 hover:border-brand/40"
+              className="animate-fade-in-up overflow-hidden rounded-2xl border border-border bg-surface text-center transition-all duration-300 hover:-translate-y-1 hover:border-brand/40"
             >
-              <p className="font-medium">{tematica.nombre}</p>
-              <p className="mt-1 text-sm text-muted">{tematica.descripcion}</p>
+              {tematica.imagen ? (
+                <img src={tematica.imagen} alt="" className="h-28 w-full object-cover" />
+              ) : (
+                <div className="flex h-28 w-full items-center justify-center text-2xl">✨</div>
+              )}
+              <div className="p-4">
+                <p className="font-medium">{tematica.nombre}</p>
+                <p className="mt-1 text-sm text-muted">{tematica.descripcion}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -48,11 +55,18 @@ export default async function HomePage() {
             <div
               key={caja.id}
               style={{ animationDelay: `${i * 80}ms` }}
-              className="animate-fade-in-up rounded-2xl border border-border bg-surface p-6 transition-all duration-300 hover:-translate-y-1 hover:border-brand/40 hover:shadow-lg hover:shadow-black/20"
+              className="animate-fade-in-up overflow-hidden rounded-2xl border border-border bg-surface transition-all duration-300 hover:-translate-y-1 hover:border-brand/40 hover:shadow-lg hover:shadow-black/20"
             >
-              <p className="text-lg font-medium">{caja.nombre}</p>
-              <p className="mt-1 text-sm text-muted">{caja.descripcion}</p>
-              <p className="mt-4 text-xl font-semibold text-brand">${caja.precio}</p>
+              {caja.imagen ? (
+                <img src={caja.imagen} alt="" className="h-40 w-full object-cover" />
+              ) : (
+                <div className="flex h-40 w-full items-center justify-center text-3xl">🎁</div>
+              )}
+              <div className="p-6">
+                <p className="text-lg font-medium">{caja.nombre}</p>
+                <p className="mt-1 text-sm text-muted">{caja.descripcion}</p>
+                <p className="mt-4 text-xl font-semibold text-brand">${caja.precio}</p>
+              </div>
             </div>
           ))}
         </div>

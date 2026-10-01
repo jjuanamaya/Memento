@@ -119,7 +119,7 @@ export function TrendChart({ data, variant, color, formato, mensajeVacio }: Tren
               y={0}
               width={animar ? (visible ? 1 : 0) : 1}
               height={1}
-              style={{ transition: animar ? "width 900ms cubic-bezier(0.22, 1, 0.36, 1)" : "none" }}
+              style={{ transition: animar ? "width 2200ms cubic-bezier(0.22, 1, 0.36, 1)" : "none" }}
             />
           </clipPath>
         </defs>
@@ -156,7 +156,7 @@ export function TrendChart({ data, variant, color, formato, mensajeVacio }: Tren
                 key={i}
                 style={{
                   transform: `translate(${p.cx}px, ${baseY}px) scaleY(${animar ? (visible ? 1 : 0) : 1}) translate(${-p.cx}px, ${-baseY}px)`,
-                  transition: animar ? `transform 500ms cubic-bezier(0.22, 1, 0.36, 1) ${Math.min(i * 25, 300)}ms` : "none",
+                  transition: animar ? `transform 1200ms cubic-bezier(0.22, 1, 0.36, 1) ${Math.min(i * 70, 900)}ms` : "none",
                 }}
               >
                 <path d={roundedTopBarPath(p.cx - barWidth / 2, p.cy, barWidth, alturaBarra, 4)} fill={color} />

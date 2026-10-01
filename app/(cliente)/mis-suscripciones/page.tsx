@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SuscripcionesList } from "@/components/cliente/SuscripcionesList";
 import { createClient } from "@/lib/supabase/server";
 import type { EstadoSuscripcion } from "@/lib/types";
+
+export const metadata: Metadata = { title: "Mis suscripciones — Memento" };
 
 export default async function MisSuscripcionesPage() {
   const supabase = await createClient();
@@ -9,7 +12,7 @@ export default async function MisSuscripcionesPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
+  if (!user) redirect("/login?next=/mis-suscripciones");
 
   const { data } = await supabase
     .from("suscripciones")

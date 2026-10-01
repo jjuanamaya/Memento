@@ -31,8 +31,9 @@ export default function PrivacidadPage() {
           {NEGOCIO.nombreComercial} puede verla.
         </li>
         <li>
-          <strong>Para tus pedidos y suscripciones:</strong> dirección de entrega, zona de reparto, medio de pago
-          elegido, productos y temáticas, y el comprobante de transferencia si decidís adjuntarlo.
+          <strong>Para tus pedidos y suscripciones:</strong> dirección de entrega, teléfono de contacto (solo para
+          coordinar la entrega), zona de reparto, medio de pago elegido, productos y temáticas, y el comprobante de
+          transferencia si decidís adjuntarlo.
         </li>
         <li>
           <strong>Si usás el Botón de arrepentimiento:</strong> nombre, email, número de pedido y el detalle que
@@ -40,7 +41,7 @@ export default function PrivacidadPage() {
         </li>
       </ul>
       <p>
-        No pedimos DNI, teléfono, datos de tarjetas ni datos bancarios. Tampoco recolectamos datos sensibles.
+        No pedimos DNI, datos de tarjetas ni datos bancarios. Tampoco recolectamos datos sensibles.
       </p>
 
       <h2>3. Para qué los usamos</h2>
@@ -71,7 +72,7 @@ export default function PrivacidadPage() {
         transferencia internacional, conforme al artículo 12 de la Ley 25.326 y su decreto reglamentario.
       </p>
       <p>
-        Si el reparto lo hace otra persona, le pasamos solo el nombre y la dirección de entrega. Fuera de eso, solo
+        Si el reparto lo hace otra persona, le pasamos solo el nombre, el teléfono y la dirección de entrega. Fuera de eso, solo
         compartiríamos tus datos con una autoridad si una ley o una orden judicial lo exige.
       </p>
 

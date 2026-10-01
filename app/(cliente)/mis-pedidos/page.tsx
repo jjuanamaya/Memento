@@ -1,21 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { ETIQUETA_ESTADO, type EstadoPedido, type MetodoPago } from "@/lib/types";
+import { MisPedidosList, type MiPedido } from "@/components/cliente/MisPedidosList";
 
-const ESTILO_ESTADO: Record<EstadoPedido, string> = {
-  armado: "bg-surface text-muted",
-  confirmado: "bg-surface text-muted",
-  en_preparacion: "bg-brand/15 text-brand",
-  en_camino: "bg-brand/15 text-brand",
-  entregado: "bg-emerald-500/15 text-emerald-400",
-  cancelado: "bg-red-500/15 text-red-400",
-};
-
-const ETIQUETA_METODO: Record<MetodoPago, string> = {
-  transferencia: "Transferencia",
-  efectivo: "Efectivo",
-};
+export const metadata: Metadata = { title: "Mis pedidos — Memento" };
 
 export default async function MisPedidosPage() {
   const supabase = await createClient();
@@ -23,25 +12,65 @@ export default async function MisPedidosPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
+  if (!user) redirect("/login?next=/mis-pedidos");
 
-  const { data: pedidos } = await supabase
+  const { data } = await supabase
     .from("pedidos")
-    .select("id, total, estado, metodo_pago, creado_en, cajas(nombre), tematicas(nombre)")
+    .select(
+      "id, total, costo_envio, estado, metodo_pago, tipo, direccion_entrega, comprobante_url, creado_en, cajas(nombre), tematicas(nombre), pedido_items(producto_id, cantidad, precio_unitario, productos(nombre))"
+    )
     .eq("usuario_id", user.id)
     .order("creado_en", { ascending: false });
+
+  const pedidos: MiPedido[] = (data ?? []).map((row) => {
+    const p = row as unknown as {
+      id: string;
+      total: number;
+      costo_envio: number;
+      estado: MiPedido["estado"];
+      metodo_pago: MiPedido["metodoPago"];
+      tipo: MiPedido["tipo"];
+      direccion_entrega: string;
+      comprobante_url: string | null;
+      creado_en: string;
+      cajas: { nombre: string } | null;
+      tematicas: { nombre: string } | null;
+      pedido_items: { producto_id: string; cantidad: number; precio_unitario: number; productos: { nombre: string } | null }[];
+    };
+    return {
+      id: p.id,
+      total: Number(p.total),
+      costoEnvio: Number(p.costo_envio),
+      estado: p.estado,
+      metodoPago: p.metodo_pago,
+      tipo: p.tipo,
+      direccion: p.direccion_entrega,
+      tieneComprobante: !!p.comprobante_url,
+      creadoEn: p.creado_en,
+      cajaNombre: p.cajas?.nombre ?? "Caja",
+      tematicaNombre: p.tematicas?.nombre ?? "",
+      items: (p.pedido_items ?? []).map((it) => ({
+        id: it.producto_id,
+        nombre: it.productos?.nombre ?? "Producto",
+        cantidad: it.cantidad,
+        subtotal: it.cantidad * Number(it.precio_unitario),
+      })),
+    };
+  });
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-12">
       <h1 className="animate-fade-in-up text-2xl font-semibold">Mis pedidos</h1>
       <p className="animate-fade-in-up mt-1 text-sm text-muted [animation-delay:60ms]">
-        El estado de cada box que armaste, en un solo lugar.
+        El estado de cada caja que armaste, en un solo lugar.
       </p>
 
-      {!pedidos || pedidos.length === 0 ? (
+      {pedidos.length === 0 ? (
         <div className="animate-fade-in-up mt-8 rounded-2xl border border-muted/30 bg-surface p-8 text-center [animation-delay:120ms]">
-          <span className="text-3xl">🎁</span>
-          <p className="mt-3 font-medium">Todavía no armaste tu primera box.</p>
+          <span aria-hidden="true" className="text-3xl">
+            🎁
+          </span>
+          <p className="mt-3 font-medium">Todavía no armaste tu primera caja.</p>
           <p className="mt-1 text-sm text-muted">Elegí una caja, sumale tu toque y convertila en un regalo.</p>
           <Link
             href="/armar"
@@ -51,40 +80,7 @@ export default async function MisPedidosPage() {
           </Link>
         </div>
       ) : (
-        <div className="mt-6 space-y-3">
-          {pedidos.map((row, i) => {
-            const pedido = row as unknown as {
-              id: string;
-              total: number;
-              estado: EstadoPedido;
-              metodo_pago: MetodoPago;
-              creado_en: string;
-              cajas: { nombre: string } | null;
-              tematicas: { nombre: string } | null;
-            };
-
-            return (
-              <div
-                key={pedido.id}
-                style={{ animationDelay: `${i * 60}ms` }}
-                className="animate-fade-in-up rounded-xl border border-muted/20 p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-brand/30"
-              >
-                <div className="flex items-center justify-between">
-                  <p className="font-medium">
-                    {pedido.cajas?.nombre} · {pedido.tematicas?.nombre}
-                  </p>
-                  <span className={`rounded-full px-3 py-1 text-xs font-medium ${ESTILO_ESTADO[pedido.estado]}`}>
-                    {ETIQUETA_ESTADO[pedido.estado]}
-                  </span>
-                </div>
-                <p className="mt-1 text-sm text-muted">
-                  Pedido #{pedido.id.slice(0, 8)} · {new Date(pedido.creado_en).toLocaleDateString("es-AR")} · $
-                  {pedido.total} · {ETIQUETA_METODO[pedido.metodo_pago]}
-                </p>
-              </div>
-            );
-          })}
-        </div>
+        <MisPedidosList usuarioId={user.id} pedidosIniciales={pedidos} />
       )}
     </div>
   );

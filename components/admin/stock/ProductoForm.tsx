@@ -100,8 +100,8 @@ export function ProductoForm({ producto, onClose, onSaved }: ProductoFormProps) 
     <Modal titulo={esEdicion ? "Editar producto" : "Nuevo producto"} onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
-          <label className="mb-1 block text-xs font-medium text-muted">Nombre</label>
-          <input
+          <label htmlFor="producto-campo-1" className="mb-1 block text-xs font-medium text-muted">Nombre</label>
+          <input id="producto-campo-1"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
             className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
@@ -109,8 +109,8 @@ export function ProductoForm({ producto, onClose, onSaved }: ProductoFormProps) 
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-muted">Descripción</label>
-          <textarea
+          <label htmlFor="producto-campo-2" className="mb-1 block text-xs font-medium text-muted">Descripción</label>
+          <textarea id="producto-campo-2"
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
             rows={2}
@@ -120,8 +120,8 @@ export function ProductoForm({ producto, onClose, onSaved }: ProductoFormProps) 
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted">Categoría</label>
-            <select
+            <label htmlFor="producto-campo-3" className="mb-1 block text-xs font-medium text-muted">Categoría</label>
+            <select id="producto-campo-3"
               value={categoria}
               onChange={(e) => setCategoria(e.target.value as CategoriaProducto)}
               className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
@@ -134,8 +134,8 @@ export function ProductoForm({ producto, onClose, onSaved }: ProductoFormProps) 
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted">Precio</label>
-            <input
+            <label htmlFor="producto-campo-4" className="mb-1 block text-xs font-medium text-muted">Precio</label>
+            <input id="producto-campo-4"
               inputMode="decimal"
               value={precio}
               onChange={(e) => setPrecio(e.target.value)}
@@ -146,8 +146,8 @@ export function ProductoForm({ producto, onClose, onSaved }: ProductoFormProps) 
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted">Stock actual</label>
-            <input
+            <label htmlFor="producto-campo-5" className="mb-1 block text-xs font-medium text-muted">Stock actual</label>
+            <input id="producto-campo-5"
               inputMode="numeric"
               value={stockActual}
               onChange={(e) => setStockActual(e.target.value)}
@@ -160,8 +160,8 @@ export function ProductoForm({ producto, onClose, onSaved }: ProductoFormProps) 
             )}
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted">Stock mínimo</label>
-            <input
+            <label htmlFor="producto-campo-6" className="mb-1 block text-xs font-medium text-muted">Stock mínimo</label>
+            <input id="producto-campo-6"
               inputMode="numeric"
               value={stockMinimo}
               onChange={(e) => setStockMinimo(e.target.value)}
@@ -171,8 +171,8 @@ export function ProductoForm({ producto, onClose, onSaved }: ProductoFormProps) 
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-muted">URL de imagen (opcional)</label>
-          <input
+          <label htmlFor="producto-campo-7" className="mb-1 block text-xs font-medium text-muted">URL de imagen (opcional)</label>
+          <input id="producto-campo-7"
             value={imagenUrl}
             onChange={(e) => setImagenUrl(e.target.value)}
             className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"

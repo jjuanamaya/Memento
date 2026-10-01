@@ -64,8 +64,8 @@ export function ProveedorForm({ proveedor, onClose, onSaved }: ProveedorFormProp
     <Modal titulo={esEdicion ? "Editar proveedor" : "Nuevo proveedor"} onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
-          <label className="mb-1 block text-xs font-medium text-muted">Nombre</label>
-          <input
+          <label htmlFor="proveedor-campo-1" className="mb-1 block text-xs font-medium text-muted">Nombre</label>
+          <input id="proveedor-campo-1"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
             className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
@@ -73,8 +73,8 @@ export function ProveedorForm({ proveedor, onClose, onSaved }: ProveedorFormProp
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-muted">Persona de contacto</label>
-          <input
+          <label htmlFor="proveedor-campo-2" className="mb-1 block text-xs font-medium text-muted">Persona de contacto</label>
+          <input id="proveedor-campo-2"
             value={contacto}
             onChange={(e) => setContacto(e.target.value)}
             className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
@@ -83,16 +83,16 @@ export function ProveedorForm({ proveedor, onClose, onSaved }: ProveedorFormProp
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted">Teléfono</label>
-            <input
+            <label htmlFor="proveedor-campo-3" className="mb-1 block text-xs font-medium text-muted">Teléfono</label>
+            <input id="proveedor-campo-3"
               value={telefono}
               onChange={(e) => setTelefono(e.target.value)}
               className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted">Email</label>
-            <input
+            <label htmlFor="proveedor-campo-4" className="mb-1 block text-xs font-medium text-muted">Email</label>
+            <input id="proveedor-campo-4"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
@@ -101,8 +101,8 @@ export function ProveedorForm({ proveedor, onClose, onSaved }: ProveedorFormProp
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-muted">Dirección</label>
-          <input
+          <label htmlFor="proveedor-campo-5" className="mb-1 block text-xs font-medium text-muted">Dirección</label>
+          <input id="proveedor-campo-5"
             value={direccion}
             onChange={(e) => setDireccion(e.target.value)}
             className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
@@ -110,8 +110,8 @@ export function ProveedorForm({ proveedor, onClose, onSaved }: ProveedorFormProp
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-muted">Notas</label>
-          <textarea
+          <label htmlFor="proveedor-campo-6" className="mb-1 block text-xs font-medium text-muted">Notas</label>
+          <textarea id="proveedor-campo-6"
             value={notas}
             onChange={(e) => setNotas(e.target.value)}
             rows={2}

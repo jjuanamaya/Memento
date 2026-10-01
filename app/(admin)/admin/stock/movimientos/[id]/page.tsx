@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchMovimientoStock } from "@/lib/supabase/queries";
 import { ETIQUETA_TIPO_MOVIMIENTO } from "@/lib/types";
+import { formatearFechaHora } from "@/lib/fechas";
 import { ImprimirButton } from "@/components/admin/stock/ImprimirButton";
 
 export default async function ComprobanteMovimientoPage({ params }: { params: Promise<{ id: string }> }) {
@@ -12,7 +13,6 @@ export default async function ComprobanteMovimientoPage({ params }: { params: Pr
 
   const total =
     movimiento.costoUnitario !== null ? movimiento.costoUnitario * movimiento.cantidad : null;
-  const fecha = new Date(movimiento.creadoEn);
 
   return (
     <div className="mx-auto max-w-xl px-6 py-10">
@@ -43,7 +43,7 @@ export default async function ComprobanteMovimientoPage({ params }: { params: Pr
           <div>
             <p className="text-xs text-muted print:text-black/60">Fecha</p>
             <p className="mt-1 font-medium">
-              {fecha.toLocaleDateString("es-AR")} · {fecha.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+              {formatearFechaHora(movimiento.creadoEn)}
             </p>
           </div>
           <div>

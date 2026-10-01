@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { ESTADOS_PEDIDO } from "@/lib/types";
+import { claveDia, diaDeSemana, etiquetaCorta, inicioDelDia, sumarDias } from "@/lib/fechas";
 import type {
   Caja,
   EstadoPedido,
@@ -92,13 +93,12 @@ export async function fetchProductos(soloActivos = true): Promise<Producto[]> {
   }));
 }
 
-export async function fetchZonasReparto(): Promise<ZonaReparto[]> {
+export async function fetchZonasReparto(soloDisponibles = true): Promise<ZonaReparto[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("zonas_reparto")
-    .select("*")
-    .eq("disponible", true)
-    .order("costo_envio");
+  let query = supabase.from("zonas_reparto").select("*").order("costo_envio").order("nombre");
+  if (soloDisponibles) query = query.eq("disponible", true);
+
+  const { data, error } = await query;
 
   if (error) throw error;
 
@@ -154,32 +154,20 @@ export interface DashboardData {
   suscripcionesPorRenovar: number;
   serieDiaria: DashboardPuntoDia[];
   metodoPago: { transferencia: number; efectivo: number };
+  arrepentimientosPendientes: number;
   huboError: boolean;
-}
-
-function claveFechaLocal(fecha: Date) {
-  const y = fecha.getFullYear();
-  const m = String(fecha.getMonth() + 1).padStart(2, "0");
-  const d = String(fecha.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
 }
 
 export async function fetchDashboard(): Promise<DashboardData> {
   const supabase = await createClient();
 
-  const hoyInicio = new Date();
-  hoyInicio.setHours(0, 0, 0, 0);
+  const claveHoy = claveDia(new Date());
+  const hoyInicio = inicioDelDia(claveHoy);
+  const semanaInicio = inicioDelDia(sumarDias(claveHoy, -diaDeSemana(claveHoy)));
+  const treintaDiasAtras = inicioDelDia(sumarDias(claveHoy, -30));
+  const claveEn7Dias = sumarDias(claveHoy, 7);
 
-  const semanaInicio = new Date(hoyInicio);
-  semanaInicio.setDate(semanaInicio.getDate() - semanaInicio.getDay());
-
-  const treintaDiasAtras = new Date(hoyInicio);
-  treintaDiasAtras.setDate(treintaDiasAtras.getDate() - 30);
-
-  const en7Dias = new Date(hoyInicio);
-  en7Dias.setDate(en7Dias.getDate() + 7);
-
-  const [pedidosRecientes, pedidosEnCursoRaw, productosRaw, suscripcionesRaw] = await Promise.all([
+  const [pedidosRecientes, pedidosEnCursoRaw, productosRaw, suscripcionesRaw, arrepentimientosRaw] = await Promise.all([
     supabase
       .from("pedidos")
       .select("id, total, estado, metodo_pago, creado_en, tematicas(nombre)")
@@ -192,6 +180,10 @@ export async function fetchDashboard(): Promise<DashboardData> {
       .limit(6),
     supabase.from("productos").select("stock_actual, stock_minimo").eq("activo", true),
     supabase.from("suscripciones").select("proxima_entrega").eq("estado", "activa"),
+    supabase
+      .from("solicitudes_arrepentimiento")
+      .select("id", { count: "exact", head: true })
+      .eq("estado", "pendiente"),
   ]);
 
   const huboError = !!(pedidosRecientes.error || pedidosEnCursoRaw.error || productosRaw.error || suscripcionesRaw.error);
@@ -233,21 +225,14 @@ export async function fetchDashboard(): Promise<DashboardData> {
   });
 
   const DIAS_SERIE = 14;
-  const diasEtiqueta = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
   const serieDiaria: DashboardPuntoDia[] = Array.from({ length: DIAS_SERIE }, (_, i) => {
-    const dia = new Date(hoyInicio);
-    dia.setDate(dia.getDate() - (DIAS_SERIE - 1 - i));
-    return {
-      fecha: claveFechaLocal(dia),
-      etiqueta: `${diasEtiqueta[dia.getDay()]} ${dia.getDate()}`,
-      monto: 0,
-      cantidad: 0,
-    };
+    const clave = sumarDias(claveHoy, -(DIAS_SERIE - 1 - i));
+    return { fecha: clave, etiqueta: etiquetaCorta(clave), monto: 0, cantidad: 0 };
   });
   const indicePorFecha = new Map(serieDiaria.map((p, i) => [p.fecha, i]));
   pedidos.forEach((p) => {
     if (p.estado === "cancelado") return;
-    const idx = indicePorFecha.get(claveFechaLocal(new Date(p.creado_en)));
+    const idx = indicePorFecha.get(claveDia(new Date(p.creado_en)));
     if (idx === undefined) return;
     serieDiaria[idx].monto += Number(p.total);
     serieDiaria[idx].cantidad += 1;
@@ -282,7 +267,7 @@ export async function fetchDashboard(): Promise<DashboardData> {
   const suscripcionesData = suscripcionesRaw.data ?? [];
   const suscripcionesActivas = suscripcionesData.length;
   const suscripcionesPorRenovar = suscripcionesData.filter(
-    (s) => s.proxima_entrega && new Date(s.proxima_entrega) <= en7Dias
+    (s) => s.proxima_entrega && s.proxima_entrega.slice(0, 10) <= claveEn7Dias
   ).length;
 
   return {
@@ -299,6 +284,7 @@ export async function fetchDashboard(): Promise<DashboardData> {
     suscripcionesPorRenovar,
     serieDiaria,
     metodoPago,
+    arrepentimientosPendientes: arrepentimientosRaw.count ?? 0,
     huboError,
   };
 }

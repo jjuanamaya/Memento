@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ETIQUETA_TIPO_MOVIMIENTO, type MovimientoStock } from "@/lib/types";
+import { formatearFecha } from "@/lib/fechas";
 
 export function MovimientosTable({ movimientos }: { movimientos: MovimientoStock[] }) {
   if (movimientos.length === 0) {
@@ -7,7 +8,7 @@ export function MovimientosTable({ movimientos }: { movimientos: MovimientoStock
   }
 
   return (
-    <div className="mt-6 overflow-x-auto rounded-xl border border-border">
+    <div className="mt-6 relative overflow-x-auto rounded-xl border border-border">
       <table className="w-full text-left text-sm">
         <thead className="bg-surface text-muted">
           <tr>
@@ -24,7 +25,7 @@ export function MovimientosTable({ movimientos }: { movimientos: MovimientoStock
         <tbody>
           {movimientos.map((m) => (
             <tr key={m.id} className="border-t border-border align-top">
-              <td className="px-4 py-3 text-muted">{new Date(m.creadoEn).toLocaleDateString("es-AR")}</td>
+              <td className="px-4 py-3 text-muted">{formatearFecha(m.creadoEn)}</td>
               <td className="px-4 py-3 font-medium">{m.productoNombre}</td>
               <td className="px-4 py-3">
                 <span

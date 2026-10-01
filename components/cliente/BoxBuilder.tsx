@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { guardarTelefono, telefonoValido } from "@/components/cliente/telefono";
 import type { Caja, MetodoPago, Producto, Tematica, ZonaReparto } from "@/lib/types";
 
 type Paso = "caja" | "tematica" | "productos" | "resumen" | "exito";
@@ -54,20 +55,23 @@ interface BoxBuilderProps {
   tematicas: Tematica[];
   productos: Producto[];
   zonas: ZonaReparto[];
+  telefonoInicial: string;
 }
 
-export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderProps) {
+export function BoxBuilder({ cajas, tematicas, productos, zonas, telefonoInicial }: BoxBuilderProps) {
   const [paso, setPaso] = useState<Paso>("caja");
   const [caja, setCaja] = useState<Caja | null>(null);
   const [tematica, setTematica] = useState<Tematica | null>(null);
   const [cantidades, setCantidades] = useState<Record<string, number>>({});
   const [metodoPago, setMetodoPago] = useState<MetodoPago | null>(null);
   const [direccion, setDireccion] = useState("");
+  const [telefono, setTelefono] = useState(telefonoInicial);
   const [zona, setZona] = useState<ZonaReparto | null>(null);
   const [comprobante, setComprobante] = useState<File | null>(null);
   const [pedidoId, setPedidoId] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [acepta, setAcepta] = useState(false);
+  const [comprobanteSubido, setComprobanteSubido] = useState(false);
   const [error, setError] = useState("");
 
   const items = useMemo(
@@ -119,6 +123,10 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
 
     const supabase = createClient();
 
+    if (telefono.trim() !== telefonoInicial.trim()) {
+      await guardarTelefono(supabase, telefono);
+    }
+
     const { data: nuevoPedidoId, error: errorPedido } = await supabase.rpc("crear_pedido", {
       p_caja_id: caja.id,
       p_tematica_id: tematica.id,
@@ -164,7 +172,11 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
         .upload(ruta, comprobante);
 
       if (!errorSubida) {
-        await supabase.from("pedidos").update({ comprobante_url: ruta }).eq("id", nuevoPedidoId);
+        const { error: errorAsociar } = await supabase
+          .from("pedidos")
+          .update({ comprobante_url: ruta })
+          .eq("id", nuevoPedidoId);
+        setComprobanteSubido(!errorAsociar);
       }
       // Si falla la subida, el pedido ya quedó creado igual — no bloqueamos
       // la compra por esto, se puede volver a mandar el comprobante después.
@@ -177,8 +189,10 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
 
   if (paso === "exito") {
     return (
-      <div className="mx-auto max-w-md px-6 py-24 text-center">
-        <span className="animate-fade-in-up inline-block text-5xl">🎉</span>
+      <div role="status" className="mx-auto max-w-md px-6 py-24 text-center">
+        <span aria-hidden="true" className="animate-fade-in-up inline-block text-5xl">
+          🎉
+        </span>
         <p className="animate-fade-in-up mt-4 text-sm text-muted [animation-delay:80ms]">
           Pedido #{pedidoId?.slice(0, 8)}
         </p>
@@ -187,15 +201,24 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
         </h1>
         <p className="animate-fade-in-up mt-4 text-muted [animation-delay:200ms]">
           {metodoPago === "transferencia"
-            ? "Te vamos a contactar con los datos para la transferencia y coordinar la entrega."
+            ? comprobanteSubido
+              ? "Recibimos tu comprobante. Te contactamos para coordinar la entrega."
+              : comprobante
+                ? "No pudimos guardar el comprobante, pero tu pedido quedó registrado. Subilo de nuevo desde \"Mis pedidos\"."
+                : "Te vamos a contactar con los datos para la transferencia. Cuando la hagas, podés subir el comprobante desde \"Mis pedidos\"."
             : "Vas a pagar en efectivo al recibir tu caja. Te contactamos para coordinar la entrega."}
         </p>
-        <Link
-          href="/"
-          className="animate-fade-in-up mt-8 inline-block rounded-full bg-brand px-6 py-3 font-medium text-brand-foreground shadow-lg shadow-brand/20 transition-all [animation-delay:260ms] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-brand/30"
-        >
-          Volver al inicio
-        </Link>
+        <div className="animate-fade-in-up mt-8 flex flex-wrap justify-center gap-3 [animation-delay:260ms]">
+          <Link
+            href="/mis-pedidos"
+            className="rounded-full bg-brand px-6 py-3 font-medium text-brand-foreground shadow-lg shadow-brand/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-brand/30"
+          >
+            Ver mis pedidos
+          </Link>
+          <Link href="/" className="rounded-full border border-border px-6 py-3 font-medium hover:border-brand/40">
+            Volver al inicio
+          </Link>
+        </div>
       </div>
     );
   }
@@ -207,7 +230,7 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
         ? !!tematica
         : paso === "productos"
           ? true
-          : !!metodoPago && !!direccion.trim() && acepta && !enviando;
+          : !!metodoPago && !!direccion.trim() && telefonoValido(telefono) && acepta && !enviando;
 
   function continuar() {
     if (paso === "caja") irA("tematica");
@@ -548,6 +571,30 @@ export function BoxBuilder({ cajas, tematicas, productos, zonas }: BoxBuilderPro
               placeholder="Calle, número y referencia"
               className={INPUT}
             />
+          </div>
+
+          <div className="mt-6">
+            <label htmlFor="pedido-telefono" className="text-sm font-medium">
+              <span aria-hidden="true">📞 </span>Teléfono para coordinar la entrega
+            </label>
+            <input
+              id="pedido-telefono"
+              type="tel"
+              required
+              autoComplete="tel"
+              inputMode="tel"
+              maxLength={30}
+              value={telefono}
+              onChange={(e) => setTelefono(e.target.value)}
+              placeholder="Ej: 3471 123456"
+              aria-describedby="pedido-telefono-ayuda"
+              className={INPUT}
+            />
+            <p id="pedido-telefono-ayuda" className="mt-1 text-xs text-muted">
+              {telefono && !telefonoValido(telefono)
+                ? "Revisá el número: tiene que tener entre 8 y 15 dígitos."
+                : "Lo usamos solo para coordinar la entrega de tus pedidos."}
+            </p>
           </div>
 
           {zonas.length > 0 && (

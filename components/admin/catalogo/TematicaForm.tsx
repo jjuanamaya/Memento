@@ -101,8 +101,8 @@ export function TematicaForm({ tematica, onClose, onSaved }: TematicaFormProps) 
     <Modal titulo={esEdicion ? "Editar temática" : "Nueva temática"} onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
-          <label className="mb-1 block text-xs font-medium text-muted">Nombre</label>
-          <input
+          <label htmlFor="tematica-campo-1" className="mb-1 block text-xs font-medium text-muted">Nombre</label>
+          <input id="tematica-campo-1"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
             className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
@@ -110,8 +110,8 @@ export function TematicaForm({ tematica, onClose, onSaved }: TematicaFormProps) 
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-muted">Descripción</label>
-          <textarea
+          <label htmlFor="tematica-campo-2" className="mb-1 block text-xs font-medium text-muted">Descripción</label>
+          <textarea id="tematica-campo-2"
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
             rows={2}
@@ -120,7 +120,7 @@ export function TematicaForm({ tematica, onClose, onSaved }: TematicaFormProps) 
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-muted">Foto de la temática</label>
+          <label htmlFor="tematica-foto" className="mb-1 block text-xs font-medium text-muted">Foto de la temática</label>
           {previsualizacion ? (
             <div className="mb-2 flex items-center gap-3">
               <img src={previsualizacion} alt="Vista previa de la foto" className="h-20 w-20 rounded-lg border border-border object-cover" />
@@ -136,6 +136,7 @@ export function TematicaForm({ tematica, onClose, onSaved }: TematicaFormProps) 
             <p className="mb-2 text-xs text-muted">Todavía no hay foto cargada.</p>
           )}
           <input
+            id="tematica-foto"
             type="file"
             accept="image/*"
             onChange={elegirArchivo}

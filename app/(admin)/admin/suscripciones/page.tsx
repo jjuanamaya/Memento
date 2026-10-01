@@ -8,7 +8,7 @@ export default async function AdminSuscripcionesPage() {
   const { data, error } = await supabase
     .from("suscripciones")
     .select(
-      "id, frecuencia_dias, precio, proxima_entrega, estado, cajas(nombre), perfiles(nombre, apellido), suscripcion_tematicas(tematicas(nombre))"
+      "id, frecuencia_dias, precio, proxima_entrega, estado, direccion_entrega, cajas(nombre), zonas_reparto(nombre), perfiles(nombre, apellido, telefono), suscripcion_tematicas(tematicas(nombre))"
     )
     .order("creado_en", { ascending: false });
 
@@ -19,8 +19,10 @@ export default async function AdminSuscripcionesPage() {
       precio: number;
       proxima_entrega: string | null;
       estado: EstadoSuscripcion;
+      direccion_entrega: string | null;
       cajas: { nombre: string } | null;
-      perfiles: { nombre: string; apellido: string | null } | null;
+      zonas_reparto: { nombre: string } | null;
+      perfiles: { nombre: string; apellido: string | null; telefono: string | null } | null;
       suscripcion_tematicas: { tematicas: { nombre: string } | null }[];
     };
 
@@ -28,6 +30,8 @@ export default async function AdminSuscripcionesPage() {
       id: s.id,
       cliente: [s.perfiles?.nombre, s.perfiles?.apellido].filter(Boolean).join(" ") || "—",
       cajaNombre: s.cajas?.nombre ?? "—",
+      telefono: s.perfiles?.telefono ?? null,
+      direccion: [s.direccion_entrega, s.zonas_reparto?.nombre].filter(Boolean).join(" · ") || null,
       precio: Number(s.precio ?? 0),
       frecuenciaDias: s.frecuencia_dias,
       proximaEntrega: s.proxima_entrega,

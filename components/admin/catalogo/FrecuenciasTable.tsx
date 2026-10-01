@@ -96,7 +96,7 @@ export function FrecuenciasTable({ frecuenciasIniciales }: { frecuenciasIniciale
       {frecuencias.length === 0 ? (
         <p className="mt-6 text-sm text-muted">Todavía no hay frecuencias cargadas.</p>
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-xl border border-border">
+        <div className="mt-6 relative overflow-x-auto rounded-xl border border-border">
           <table className="w-full text-left text-sm">
             <thead className="bg-surface text-muted">
               <tr>

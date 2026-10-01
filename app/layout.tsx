@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Quicksand } from "next/font/google";
 import "./globals.css";
+import { SITIO_URL } from "@/lib/negocio";
 
 const quicksand = Quicksand({
   variable: "--font-quicksand",
@@ -12,10 +13,20 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const DESCRIPCION =
+  "Cajas de regalo armadas a tu medida con snacks, dulces y bebidas, entregadas a domicilio en Cañada de Gómez.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITIO_URL),
   title: "Memento — Regalá un momento",
-  description:
-    "Cajas de regalo armadas a tu medida con snacks, dulces y bebidas, entregadas a domicilio en Cañada de Gómez.",
+  description: DESCRIPCION,
+  openGraph: {
+    type: "website",
+    locale: "es_AR",
+    siteName: "Memento",
+    title: "Memento — Regalá un momento",
+    description: DESCRIPCION,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

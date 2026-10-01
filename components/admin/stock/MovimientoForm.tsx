@@ -81,8 +81,8 @@ export function MovimientoForm({ producto, proveedores, onClose, onSaved }: Movi
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-muted">Cantidad</label>
-          <input
+          <label htmlFor="movimiento-campo-1" className="mb-1 block text-xs font-medium text-muted">Cantidad</label>
+          <input id="movimiento-campo-1"
             inputMode="numeric"
             value={cantidad}
             onChange={(e) => setCantidad(e.target.value)}
@@ -93,8 +93,8 @@ export function MovimientoForm({ producto, proveedores, onClose, onSaved }: Movi
         {tipo === "entrada" && (
           <>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted">Proveedor (opcional)</label>
-              <select
+              <label htmlFor="movimiento-campo-2" className="mb-1 block text-xs font-medium text-muted">Proveedor (opcional)</label>
+              <select id="movimiento-campo-2"
                 value={proveedorId}
                 onChange={(e) => setProveedorId(e.target.value)}
                 className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
@@ -110,8 +110,8 @@ export function MovimientoForm({ producto, proveedores, onClose, onSaved }: Movi
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted">Costo unitario (opcional)</label>
-              <input
+              <label htmlFor="movimiento-campo-3" className="mb-1 block text-xs font-medium text-muted">Costo unitario (opcional)</label>
+              <input id="movimiento-campo-3"
                 inputMode="decimal"
                 value={costoUnitario}
                 onChange={(e) => setCostoUnitario(e.target.value)}
@@ -123,8 +123,8 @@ export function MovimientoForm({ producto, proveedores, onClose, onSaved }: Movi
         )}
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-muted">Motivo (opcional)</label>
-          <input
+          <label htmlFor="movimiento-campo-4" className="mb-1 block text-xs font-medium text-muted">Motivo (opcional)</label>
+          <input id="movimiento-campo-4"
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
             placeholder={tipo === "entrada" ? "Ej: compra mensual" : "Ej: producto vencido, ajuste de conteo"}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { guardarTelefono, telefonoValido } from "@/components/cliente/telefono";
 import type { Caja, FrecuenciaSuscripcion, MetodoPago, Tematica, ZonaReparto } from "@/lib/types";
 
 const MIN_TEMATICAS = 2;
@@ -16,13 +17,15 @@ interface SuscripcionFormProps {
   tematicas: Tematica[];
   zonas: ZonaReparto[];
   frecuencias: FrecuenciaSuscripcion[];
+  telefonoInicial: string;
 }
 
-export function SuscripcionForm({ cajas, tematicas, zonas, frecuencias }: SuscripcionFormProps) {
+export function SuscripcionForm({ cajas, tematicas, zonas, frecuencias, telefonoInicial }: SuscripcionFormProps) {
   const [caja, setCaja] = useState<Caja | null>(null);
   const [tematicasElegidas, setTematicasElegidas] = useState<Tematica[]>([]);
   const [frecuenciaDias, setFrecuenciaDias] = useState(frecuencias[0]?.dias ?? 30);
   const [direccion, setDireccion] = useState("");
+  const [telefono, setTelefono] = useState(telefonoInicial);
   const [zona, setZona] = useState<ZonaReparto | null>(null);
   const [metodoPago, setMetodoPago] = useState<MetodoPago | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -45,6 +48,10 @@ export function SuscripcionForm({ cajas, tematicas, zonas, frecuencias }: Suscri
     setError("");
 
     const supabase = createClient();
+
+    if (telefono.trim() !== telefonoInicial.trim()) {
+      await guardarTelefono(supabase, telefono);
+    }
     const { error: errorSuscripcion } = await supabase.rpc("crear_suscripcion", {
       p_caja_id: caja.id,
       p_frecuencia_dias: frecuenciaDias,
@@ -213,6 +220,30 @@ export function SuscripcionForm({ cajas, tematicas, zonas, frecuencias }: Suscri
         />
       </div>
 
+      <div className="mt-6">
+        <label htmlFor="sus-telefono" className="text-sm font-medium">
+          Teléfono para coordinar las entregas
+        </label>
+        <input
+          id="sus-telefono"
+          type="tel"
+          required
+          autoComplete="tel"
+          inputMode="tel"
+          maxLength={30}
+          value={telefono}
+          onChange={(e) => setTelefono(e.target.value)}
+          placeholder="Ej: 3471 123456"
+          aria-describedby="sus-telefono-ayuda"
+          className="mt-2 w-full rounded-xl border border-muted/70 bg-transparent p-3 outline-none transition-shadow focus:border-brand focus:shadow-[0_0_0_3px_rgba(232,121,79,0.18)]"
+        />
+        <p id="sus-telefono-ayuda" className="mt-1 text-xs text-muted">
+          {telefono && !telefonoValido(telefono)
+            ? "Revisá el número: tiene que tener entre 8 y 15 dígitos."
+            : "Lo usamos solo para coordinar las entregas."}
+        </p>
+      </div>
+
       {zonas.length > 0 && (
         <div className="mt-6">
           <label htmlFor="sus-zona" className="text-sm font-medium">
@@ -229,7 +260,7 @@ export function SuscripcionForm({ cajas, tematicas, zonas, frecuencias }: Suscri
             </option>
             {zonas.map((z) => (
               <option key={z.id} value={z.id} className="bg-background">
-                {z.nombre} — {z.costoEnvio === 0 ? "envío gratis" : `$${z.costoEnvio}`}
+                {z.nombre} — {z.costoEnvio === 0 ? "envío gratis" : formatoMoneda(z.costoEnvio)}
               </option>
             ))}
           </select>
@@ -265,9 +296,23 @@ export function SuscripcionForm({ cajas, tematicas, zonas, frecuencias }: Suscri
       </div>
 
       {frecuenciaElegida && (
-        <div className="mt-6 flex items-center justify-between rounded-xl border border-border bg-surface px-5 py-4">
-          <span className="text-sm text-muted">{frecuenciaElegida.etiqueta} — total por entrega</span>
-          <span className="text-lg font-semibold text-brand">{formatoMoneda(frecuenciaElegida.precio)}</span>
+        <div className="mt-6 space-y-1 rounded-xl border border-border bg-surface px-5 py-4 text-sm">
+          <div className="flex justify-between text-muted">
+            <span>Caja ({frecuenciaElegida.etiqueta.toLowerCase()})</span>
+            <span>{formatoMoneda(frecuenciaElegida.precio)}</span>
+          </div>
+          {zona && (
+            <div className="flex justify-between text-muted">
+              <span>Envío · {zona.nombre}</span>
+              <span>{zona.costoEnvio === 0 ? "Gratis" : formatoMoneda(zona.costoEnvio)}</span>
+            </div>
+          )}
+          <div className="flex items-baseline justify-between border-t border-border pt-2">
+            <span className="font-medium">Total por entrega</span>
+            <span className="text-lg font-semibold text-brand">
+              {formatoMoneda(frecuenciaElegida.precio + (zona?.costoEnvio ?? 0))}
+            </span>
+          </div>
         </div>
       )}
 
@@ -308,7 +353,7 @@ export function SuscripcionForm({ cajas, tematicas, zonas, frecuencias }: Suscri
         <button
           type="button"
           disabled={
-            !caja || !metodoPago || !direccion.trim() || !acepta || tematicasElegidas.length < MIN_TEMATICAS || enviando
+            !caja || !metodoPago || !direccion.trim() || !telefonoValido(telefono) || !acepta || tematicasElegidas.length < MIN_TEMATICAS || enviando
           }
           onClick={suscribirse}
           className="rounded-full bg-brand px-6 py-3 font-medium text-brand-foreground shadow-lg shadow-brand/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-brand/30 active:translate-y-0 disabled:pointer-events-none disabled:opacity-40 disabled:shadow-none"

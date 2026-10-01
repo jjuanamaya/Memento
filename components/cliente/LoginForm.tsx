@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export function LoginForm() {
+export function LoginForm({ destino, enlaceVencido }: { destino: string; enlaceVencido: boolean }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,7 +27,7 @@ export function LoginForm() {
       return;
     }
 
-    router.push("/");
+    router.push(destino);
     router.refresh();
   }
 
@@ -36,6 +36,12 @@ export function LoginForm() {
       <div className="animate-fade-in-up rounded-2xl border border-border bg-surface p-8">
         <h1 className="text-2xl font-semibold">Ingresar</h1>
         <p className="mt-1 text-sm text-muted">Entrá para seguir armando tu momento.</p>
+
+        {enlaceVencido && (
+          <p role="alert" className="mt-4 rounded-lg border border-red-400/40 p-3 text-sm text-red-400">
+            El enlace venció o ya se usó. Si querías cambiar tu contraseña, pedí uno nuevo.
+          </p>
+        )}
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
@@ -73,6 +79,12 @@ export function LoginForm() {
             </p>
           )}
 
+          <p className="text-right text-sm">
+            <Link href="/recuperar" className="text-muted underline underline-offset-2 hover:text-foreground">
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </p>
+
           <button
             type="submit"
             disabled={cargando}
@@ -84,7 +96,10 @@ export function LoginForm() {
 
         <p className="mt-4 text-sm text-muted">
           ¿No tenés cuenta?{" "}
-          <Link href="/registro" className="text-brand transition-opacity hover:opacity-80">
+          <Link
+            href={destino === "/" ? "/registro" : `/registro?next=${encodeURIComponent(destino)}`}
+            className="text-brand transition-opacity hover:opacity-80"
+          >
             Registrate
           </Link>
         </p>

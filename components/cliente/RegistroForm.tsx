@@ -17,7 +17,7 @@ function traducirError(mensaje: string) {
   return "No pudimos crear la cuenta. Probá de nuevo en un momento.";
 }
 
-export function RegistroForm() {
+export function RegistroForm({ destino }: { destino: string }) {
   const router = useRouter();
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
@@ -42,6 +42,7 @@ export function RegistroForm() {
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(destino)}`,
         data: {
           nombre,
           // Constancia del consentimiento (Ley 25.326): cuándo y qué versión aceptó.
@@ -63,7 +64,7 @@ export function RegistroForm() {
       return;
     }
 
-    router.push("/");
+    router.push(destino);
     router.refresh();
   }
 
@@ -163,7 +164,10 @@ export function RegistroForm() {
 
         <p className="mt-4 text-sm text-muted">
           ¿Ya tenés cuenta?{" "}
-          <Link href="/login" className="text-brand transition-opacity hover:opacity-80">
+          <Link
+            href={destino === "/" ? "/login" : `/login?next=${encodeURIComponent(destino)}`}
+            className="text-brand transition-opacity hover:opacity-80"
+          >
             Ingresá
           </Link>
         </p>

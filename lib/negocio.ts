@@ -17,6 +17,10 @@ export const NEGOCIO = {
 
 export const ULTIMA_ACTUALIZACION_LEGAL = "1 de octubre de 2026";
 
+// Dirección pública del sitio (se usa para el sitemap). Cambiala si algún
+// día usás un dominio propio, por ejemplo https://memento.com.ar
+export const SITIO_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://memento-nine-lake.vercel.app";
+
 export const LINK_DEFENSA_CONSUMIDOR = "https://www.argentina.gob.ar/produccion/defensadelconsumidor/formulario";
 export const LINK_AAIP = "https://www.argentina.gob.ar/aaip/datospersonales";
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { formatearDia } from "@/lib/fechas";
 import type { EstadoSuscripcion } from "@/lib/types";
 import { ETIQUETA_ESTADO_SUSCRIPCION } from "@/lib/types";
 
@@ -9,6 +10,8 @@ export interface SuscripcionAdminRow {
   id: string;
   cliente: string;
   cajaNombre: string;
+  telefono: string | null;
+  direccion: string | null;
   precio: number;
   frecuenciaDias: number;
   proximaEntrega: string | null;
@@ -55,7 +58,7 @@ export function SuscripcionesTable({ suscripcionesIniciales }: { suscripcionesIn
   }
 
   return (
-    <div className="mt-6 overflow-x-auto rounded-xl border border-border">
+    <div className="mt-6 relative overflow-x-auto rounded-xl border border-border">
       <table className="w-full text-left text-sm">
         <thead className="bg-surface text-muted">
           <tr>
@@ -72,13 +75,21 @@ export function SuscripcionesTable({ suscripcionesIniciales }: { suscripcionesIn
         <tbody>
           {suscripciones.map((s) => (
             <tr key={s.id} className="border-t border-border align-top">
-              <td className="px-4 py-3">{s.cliente}</td>
+              <td className="px-4 py-3">
+                {s.cliente}
+                {s.telefono && (
+                  <a href={`tel:${s.telefono}`} className="block text-xs text-brand underline">
+                    {s.telefono}
+                  </a>
+                )}
+                {s.direccion && <p className="text-xs text-muted">{s.direccion}</p>}
+              </td>
               <td className="px-4 py-3">{s.cajaNombre}</td>
               <td className="px-4 py-3 text-muted">{s.tematicas.join(", ")}</td>
               <td className="px-4 py-3 text-muted">cada {s.frecuenciaDias} días</td>
               <td className="px-4 py-3 font-medium">{formatoMoneda(s.precio)}</td>
               <td className="px-4 py-3 text-muted">
-                {s.proximaEntrega ? new Date(s.proximaEntrega).toLocaleDateString("es-AR") : "—"}
+                {s.proximaEntrega ? formatearDia(s.proximaEntrega) : "—"}
               </td>
               <td className="px-4 py-3">
                 <span className={`rounded-full px-3 py-1 text-xs font-medium ${ESTILO_ESTADO[s.estado]}`}>

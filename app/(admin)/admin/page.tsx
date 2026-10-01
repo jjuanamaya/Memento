@@ -35,6 +35,24 @@ export default async function AdminDashboardPage() {
         </p>
       )}
 
+      {data.arrepentimientosPendientes > 0 && (
+        <Link
+          href="/admin/arrepentimientos"
+          className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-red-400/50 bg-red-500/10 p-4 text-sm transition-colors hover:bg-red-500/15"
+        >
+          <span>
+            <strong className="text-red-400">
+              {data.arrepentimientosPendientes} solicitud{data.arrepentimientosPendientes === 1 ? "" : "es"} de
+              arrepentimiento sin resolver.
+            </strong>{" "}
+            <span className="text-muted">La ley pide atenderlas rápido: escribile al cliente para coordinar.</span>
+          </span>
+          <span aria-hidden="true" className="text-red-400">
+            →
+          </span>
+        </Link>
+      )}
+
       {/* Accesos rápidos — a dónde ir para hacer algo */}
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {ACCESOS_RAPIDOS.map((a) => (

@@ -118,8 +118,8 @@ export function CajaForm({ caja, onClose, onSaved }: CajaFormProps) {
     <Modal titulo={esEdicion ? "Editar caja" : "Nueva caja"} onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
-          <label className="mb-1 block text-xs font-medium text-muted">Nombre</label>
-          <input
+          <label htmlFor="caja-campo-1" className="mb-1 block text-xs font-medium text-muted">Nombre</label>
+          <input id="caja-campo-1"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
             className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
@@ -127,8 +127,8 @@ export function CajaForm({ caja, onClose, onSaved }: CajaFormProps) {
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-muted">Descripción</label>
-          <textarea
+          <label htmlFor="caja-campo-2" className="mb-1 block text-xs font-medium text-muted">Descripción</label>
+          <textarea id="caja-campo-2"
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
             rows={2}
@@ -138,8 +138,8 @@ export function CajaForm({ caja, onClose, onSaved }: CajaFormProps) {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted">Precio</label>
-            <input
+            <label htmlFor="caja-campo-3" className="mb-1 block text-xs font-medium text-muted">Precio</label>
+            <input id="caja-campo-3"
               inputMode="decimal"
               value={precio}
               onChange={(e) => setPrecio(e.target.value)}
@@ -147,8 +147,8 @@ export function CajaForm({ caja, onClose, onSaved }: CajaFormProps) {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted">Capacidad (productos)</label>
-            <input
+            <label htmlFor="caja-campo-4" className="mb-1 block text-xs font-medium text-muted">Capacidad (productos)</label>
+            <input id="caja-campo-4"
               inputMode="numeric"
               value={capacidad}
               onChange={(e) => setCapacidad(e.target.value)}
@@ -158,7 +158,7 @@ export function CajaForm({ caja, onClose, onSaved }: CajaFormProps) {
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-muted">Foto de la caja</label>
+          <label htmlFor="caja-foto" className="mb-1 block text-xs font-medium text-muted">Foto de la caja</label>
           {previsualizacion ? (
             <div className="mb-2 flex items-center gap-3">
               <img src={previsualizacion} alt="Vista previa de la foto" className="h-20 w-20 rounded-lg border border-border object-cover" />
@@ -174,6 +174,7 @@ export function CajaForm({ caja, onClose, onSaved }: CajaFormProps) {
             <p className="mb-2 text-xs text-muted">Todavía no hay foto cargada.</p>
           )}
           <input
+            id="caja-foto"
             type="file"
             accept="image/*"
             onChange={elegirArchivo}

@@ -88,8 +88,8 @@ export function FrecuenciaForm({ frecuencia, onClose, onSaved }: FrecuenciaFormP
     <Modal titulo={esEdicion ? "Editar frecuencia" : "Nueva frecuencia"} onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
-          <label className="mb-1 block text-xs font-medium text-muted">Nombre (como lo ve el cliente)</label>
-          <input
+          <label htmlFor="frecuencia-campo-1" className="mb-1 block text-xs font-medium text-muted">Nombre (como lo ve el cliente)</label>
+          <input id="frecuencia-campo-1"
             value={etiqueta}
             onChange={(e) => setEtiqueta(e.target.value)}
             placeholder="Cada semana"
@@ -99,8 +99,8 @@ export function FrecuenciaForm({ frecuencia, onClose, onSaved }: FrecuenciaFormP
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted">Cada cuántos días</label>
-            <input
+            <label htmlFor="frecuencia-campo-2" className="mb-1 block text-xs font-medium text-muted">Cada cuántos días</label>
+            <input id="frecuencia-campo-2"
               inputMode="numeric"
               value={dias}
               onChange={(e) => setDias(e.target.value)}
@@ -108,8 +108,8 @@ export function FrecuenciaForm({ frecuencia, onClose, onSaved }: FrecuenciaFormP
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted">Precio por entrega</label>
-            <input
+            <label htmlFor="frecuencia-campo-3" className="mb-1 block text-xs font-medium text-muted">Precio por entrega</label>
+            <input id="frecuencia-campo-3"
               inputMode="decimal"
               value={precio}
               onChange={(e) => setPrecio(e.target.value)}

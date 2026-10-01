@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { formatearDia } from "@/lib/fechas";
 import type { EstadoSuscripcion, Suscripcion } from "@/lib/types";
 import { ETIQUETA_ESTADO_SUSCRIPCION } from "@/lib/types";
 
@@ -89,7 +90,7 @@ export function SuscripcionesList({ suscripcionesIniciales }: { suscripcionesIni
           <p className="mt-2 text-sm text-muted">Entre: {s.tematicas.join(", ")}</p>
           {s.proximaEntrega && s.estado === "activa" && (
             <p className="mt-1 text-xs text-muted">
-              Próxima entrega desde el {new Date(s.proximaEntrega).toLocaleDateString("es-AR")}
+              Próxima entrega desde el {formatearDia(s.proximaEntrega)}
             </p>
           )}
 

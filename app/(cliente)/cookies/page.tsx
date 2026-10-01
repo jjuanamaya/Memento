@@ -15,7 +15,7 @@ export default function CookiesPage() {
       <p>
         Usamos <strong>únicamente cookies necesarias</strong>: sin ellas no podrías iniciar sesión ni comprar.
       </p>
-      <div className="overflow-x-auto rounded-xl border border-border">
+      <div className="relative overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-left text-sm">
           <caption className="sr-only">Cookies que usa el sitio</caption>
           <thead className="bg-surface text-foreground">

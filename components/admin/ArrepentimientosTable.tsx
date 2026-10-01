@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { formatearFechaHora } from "@/lib/fechas";
 
 export interface SolicitudArrepentimiento {
   id: string;
@@ -47,7 +48,7 @@ export function ArrepentimientosTable({ iniciales }: { iniciales: SolicitudArrep
           {error}
         </p>
       )}
-      <div className="overflow-x-auto rounded-xl border border-border">
+      <div className="relative overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-left text-sm">
           <thead className="bg-surface text-muted">
             <tr>
@@ -66,7 +67,7 @@ export function ArrepentimientosTable({ iniciales }: { iniciales: SolicitudArrep
             {solicitudes.map((s) => (
               <tr key={s.id} className="border-t border-border align-top">
                 <td className="px-4 py-3 font-mono text-xs">{s.codigo}</td>
-                <td className="px-4 py-3 text-muted">{new Date(s.creadoEn).toLocaleString("es-AR")}</td>
+                <td className="px-4 py-3 text-muted">{formatearFechaHora(s.creadoEn)}</td>
                 <td className="px-4 py-3">
                   {s.nombre}
                   <br />

@@ -59,12 +59,15 @@ export function TrendChart({ data, variant, color, formato, mensajeVacio }: Tren
   const formatValor = formato === "moneda" ? formatoMonedaCompacta : formatoCantidadPedidos;
 
   useEffect(() => {
-    setAnimar(!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    let frame2 = 0;
     const frame1 = requestAnimationFrame(() => {
-      const frame2 = requestAnimationFrame(() => setVisible(true));
-      return () => cancelAnimationFrame(frame2);
+      setAnimar(!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+      frame2 = requestAnimationFrame(() => setVisible(true));
     });
-    return () => cancelAnimationFrame(frame1);
+    return () => {
+      cancelAnimationFrame(frame1);
+      cancelAnimationFrame(frame2);
+    };
   }, []);
 
   const total = data.reduce((acc, d) => acc + d.valor, 0);

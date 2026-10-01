@@ -13,12 +13,15 @@ export function MetodoPagoBar({ transferencia, efectivo }: MetodoPagoBarProps) {
   const [animar, setAnimar] = useState(true);
 
   useEffect(() => {
-    setAnimar(!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    let frame2 = 0;
     const frame1 = requestAnimationFrame(() => {
-      const frame2 = requestAnimationFrame(() => setVisible(true));
-      return () => cancelAnimationFrame(frame2);
+      setAnimar(!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+      frame2 = requestAnimationFrame(() => setVisible(true));
     });
-    return () => cancelAnimationFrame(frame1);
+    return () => {
+      cancelAnimationFrame(frame1);
+      cancelAnimationFrame(frame2);
+    };
   }, []);
 
   const total = transferencia + efectivo;

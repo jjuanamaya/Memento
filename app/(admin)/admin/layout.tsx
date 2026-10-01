@@ -10,14 +10,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   if (!user) redirect("/login");
 
-  const { data: perfil } = await supabase.from("perfiles").select("rol").eq("id", user.id).single();
+  const { data: perfil } = await supabase.from("perfiles").select("rol, nombre").eq("id", user.id).single();
 
   if (perfil?.rol !== "admin") redirect("/");
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <div className="print:hidden">
-        <AdminNav />
+        <AdminNav nombre={perfil?.nombre ?? null} />
       </div>
       <main className="flex-1">{children}</main>
     </div>

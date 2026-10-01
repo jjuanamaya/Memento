@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Memento — Cajas de regalo temáticas",
+  title: "Memento — Regalá un momento",
   description:
-    "Cajas de regalo temáticas con snacks, dulces y bebidas, armadas a tu gusto y repartidas a domicilio en Cañada de Gómez.",
+    "Cajas de regalo armadas a tu medida con snacks, dulces y bebidas, entregadas a domicilio en Cañada de Gómez.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

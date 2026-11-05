@@ -4,7 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ProductoForm } from "@/components/admin/stock/ProductoForm";
 import { MovimientoForm } from "@/components/admin/stock/MovimientoForm";
-import type { Producto, Proveedor } from "@/lib/types";
+import type { CategoriaProducto, Producto, Proveedor } from "@/lib/types";
 
 type ModalState =
   | { tipo: "crear" }
@@ -15,10 +15,13 @@ type ModalState =
 export function ProductosTable({
   productosIniciales,
   proveedores,
+  categorias,
 }: {
   productosIniciales: Producto[];
   proveedores: Proveedor[];
+  categorias: CategoriaProducto[];
 }) {
+  const nombreProveedor = (id: string | null) => proveedores.find((p) => p.id === id)?.nombre ?? null;
   const [productos, setProductos] = useState(productosIniciales);
   const [modal, setModal] = useState<ModalState>(null);
   const [eliminando, setEliminando] = useState<string | null>(null);
@@ -111,7 +114,7 @@ export function ProductosTable({
               <tr>
                 <th className="px-4 py-3">Producto</th>
                 <th className="px-4 py-3">Categoría</th>
-                <th className="px-4 py-3">Precio</th>
+                <th className="px-4 py-3">Costo / Precio</th>
                 <th className="px-4 py-3">Stock</th>
                 <th className="px-4 py-3">Estado</th>
                 <th className="px-4 py-3"></th>
@@ -123,9 +126,19 @@ export function ProductosTable({
                 const stockBajo = !sinStock && producto.stockActual <= producto.stockMinimo;
                 return (
                   <tr key={producto.id} className="border-t border-border align-top">
-                    <td className="px-4 py-3 font-medium">{producto.nombre}</td>
-                    <td className="px-4 py-3 capitalize text-muted">{producto.categoria}</td>
-                    <td className="px-4 py-3">${producto.precio}</td>
+                    <td className="px-4 py-3 font-medium">
+                      {producto.nombre}
+                      {nombreProveedor(producto.proveedorId) && (
+                        <p className="text-xs font-normal text-muted">{nombreProveedor(producto.proveedorId)}</p>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-muted">{producto.categoriaNombre}</td>
+                    <td className="px-4 py-3">
+                      <span className={producto.costo > 0 ? "text-muted" : "text-yellow-400"}>
+                        {producto.costo > 0 ? `$${producto.costo.toLocaleString("es-AR")}` : "Sin costo"}
+                      </span>
+                      <span className="text-muted"> / </span>${producto.precio.toLocaleString("es-AR")}
+                    </td>
                     <td className="px-4 py-3">
                       <span
                         className={
@@ -182,9 +195,22 @@ export function ProductosTable({
         </div>
       )}
 
-      {modal?.tipo === "crear" && <ProductoForm onClose={() => setModal(null)} onSaved={actualizarProducto} />}
+      {modal?.tipo === "crear" && (
+        <ProductoForm
+          categorias={categorias}
+          proveedores={proveedores}
+          onClose={() => setModal(null)}
+          onSaved={actualizarProducto}
+        />
+      )}
       {modal?.tipo === "editar" && (
-        <ProductoForm producto={modal.producto} onClose={() => setModal(null)} onSaved={actualizarProducto} />
+        <ProductoForm
+          producto={modal.producto}
+          categorias={categorias}
+          proveedores={proveedores}
+          onClose={() => setModal(null)}
+          onSaved={actualizarProducto}
+        />
       )}
       {modal?.tipo === "movimiento" && (
         <MovimientoForm

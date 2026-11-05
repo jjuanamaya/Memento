@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { BoxBuilder } from "@/components/cliente/BoxBuilder";
-import { fetchCajas, fetchProductos, fetchTematicas, fetchZonasReparto } from "@/lib/supabase/queries";
+import {
+  fetchCajas,
+  fetchCategorias,
+  fetchConfiguracion,
+  fetchCotizaciones,
+  fetchProductos,
+  fetchTematicas,
+} from "@/lib/supabase/queries";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Armar mi caja — Memento" };
@@ -14,11 +21,13 @@ export default async function ArmarPage() {
 
   if (!user) redirect("/login?next=/armar");
 
-  const [cajas, tematicas, productos, zonas, perfil] = await Promise.all([
+  const [cajas, tematicas, cotizaciones, productos, categorias, config, perfil] = await Promise.all([
     fetchCajas(),
     fetchTematicas(),
+    fetchCotizaciones(),
     fetchProductos(),
-    fetchZonasReparto(),
+    fetchCategorias(),
+    fetchConfiguracion(),
     supabase.from("perfiles").select("telefono").eq("id", user.id).single(),
   ]);
 
@@ -26,8 +35,10 @@ export default async function ArmarPage() {
     <BoxBuilder
       cajas={cajas}
       tematicas={tematicas}
+      cotizaciones={cotizaciones}
       productos={productos}
-      zonas={zonas}
+      categorias={categorias}
+      config={config}
       telefonoInicial={perfil.data?.telefono ?? ""}
     />
   );

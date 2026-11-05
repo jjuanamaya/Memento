@@ -4,19 +4,23 @@ import { useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Modal } from "@/components/admin/ui/Modal";
 import { borrarImagenCatalogo, subirImagenCatalogo } from "@/components/admin/catalogo/imagenCatalogo";
-import type { Tematica } from "@/lib/types";
+import { mapearTematica, SELECT_TEMATICA } from "@/lib/mapeos";
+import type { Producto, Tematica } from "@/lib/types";
 
 interface TematicaFormProps {
   tematica?: Tematica;
+  productos: Producto[];
   onClose: () => void;
   onSaved: (tematica: Tematica) => void;
 }
 
-export function TematicaForm({ tematica, onClose, onSaved }: TematicaFormProps) {
+export function TematicaForm({ tematica, productos, onClose, onSaved }: TematicaFormProps) {
   const esEdicion = !!tematica;
+  const esPersonalizada = !!tematica?.personalizada;
 
   const [nombre, setNombre] = useState(tematica?.nombre ?? "");
   const [descripcion, setDescripcion] = useState(tematica?.descripcion ?? "");
+  const [productoIds, setProductoIds] = useState<string[]>(tematica?.productoIds ?? []);
   const [imagenUrl, setImagenUrl] = useState(tematica?.imagen ?? "");
   const [archivoNuevo, setArchivoNuevo] = useState<File | null>(null);
   const [previsualizacion, setPrevisualizacion] = useState(tematica?.imagen ?? "");
@@ -77,24 +81,49 @@ export function TematicaForm({ tematica, onClose, onSaved }: TematicaFormProps) 
     };
 
     const resultado = esEdicion
-      ? await supabase.from("tematicas").update(payload).eq("id", tematica!.id).select().single()
-      : await supabase.from("tematicas").insert(payload).select().single();
-
-    setGuardando(false);
+      ? await supabase.from("tematicas").update(payload).eq("id", tematica!.id).select("id").single()
+      : await supabase.from("tematicas").insert(payload).select("id").single();
 
     if (resultado.error || !resultado.data) {
+      console.error("Error al guardar la temática:", resultado.error);
+      setGuardando(false);
       setError(esEdicion ? "No se pudo guardar la temática. Probá de nuevo." : "No se pudo crear la temática. Probá de nuevo.");
       return;
     }
 
-    const t = resultado.data;
-    onSaved({
-      id: t.id,
-      nombre: t.nombre,
-      descripcion: t.descripcion ?? "",
-      imagen: t.imagen_url ?? "",
-      activa: t.activa,
-    });
+    const tematicaId = resultado.data.id as string;
+
+    // Reemplaza los productos con los que se llena la caja.
+    let errorContenido = null;
+    if (!esPersonalizada) {
+      const { error: errorBorrar } = await supabase.from("tematica_productos").delete().eq("tematica_id", tematicaId);
+      errorContenido = errorBorrar;
+      if (!errorBorrar && productoIds.length > 0) {
+        const { error: errorInsert } = await supabase
+          .from("tematica_productos")
+          .insert(productoIds.map((productoId) => ({ tematica_id: tematicaId, producto_id: productoId })));
+        errorContenido = errorInsert;
+      }
+    }
+
+    const { data: final } = await supabase.from("tematicas").select(SELECT_TEMATICA).eq("id", tematicaId).single();
+    setGuardando(false);
+
+    if (errorContenido) {
+      console.error("Error al guardar los productos de la temática:", errorContenido);
+      setError("La temática se guardó, pero no sus productos. Revisalos y guardá de nuevo.");
+      return;
+    }
+    if (!final) {
+      setError("La temática se guardó, pero no se pudo recargar. Actualizá la página.");
+      return;
+    }
+
+    onSaved(mapearTematica(final));
+  }
+
+  function alternarProducto(id: string) {
+    setProductoIds((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]));
   }
 
   return (
@@ -118,6 +147,39 @@ export function TematicaForm({ tematica, onClose, onSaved }: TematicaFormProps) 
             className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
           />
         </div>
+
+        {esPersonalizada ? (
+          <p className="rounded-lg bg-brand/10 px-3 py-2 text-sm">
+            Esta es la temática <strong>Personalizada</strong>: el cliente elige cada producto, así que no lleva
+            productos fijos.
+          </p>
+        ) : (
+          <fieldset className="rounded-xl border border-border p-4">
+            <legend className="px-1 text-xs font-medium text-muted">
+              Productos con los que se llena la caja ({productoIds.length})
+            </legend>
+            <p className="text-[11px] text-muted">
+              La caja se llena hasta su capacidad repartiendo estos productos según el stock que haya.
+            </p>
+            <div className="mt-2 grid max-h-56 gap-1 overflow-y-auto sm:grid-cols-2">
+              {productos.map((p) => (
+                <label key={p.id} className="flex items-center gap-2 rounded-lg px-2 py-1 text-sm hover:bg-background">
+                  <input
+                    type="checkbox"
+                    checked={productoIds.includes(p.id)}
+                    onChange={() => alternarProducto(p.id)}
+                    className="h-4 w-4"
+                  />
+                  <span className="truncate">
+                    {p.nombre}
+                    {!p.activo && <span className="text-muted"> (inactivo)</span>}
+                    {p.costo <= 0 && <span className="text-yellow-400"> · sin costo</span>}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        )}
 
         <div>
           <label htmlFor="tematica-foto" className="mb-1 block text-xs font-medium text-muted">Foto de la temática</label>

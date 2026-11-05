@@ -32,8 +32,8 @@ export default function PrivacidadPage() {
         </li>
         <li>
           <strong>Para tus pedidos y suscripciones:</strong> dirección de entrega, teléfono de contacto (solo para
-          coordinar la entrega), zona de reparto, medio de pago elegido, productos y temáticas, y el comprobante de
-          transferencia si decidís adjuntarlo.
+          coordinar la entrega), indicaciones de entrega que nos dejes, si preferís envío o retiro, medio de pago
+          elegido, productos y temáticas, y el comprobante de transferencia si pagás por ese medio.
         </li>
         <li>
           <strong>Si usás el Botón de arrepentimiento:</strong> nombre, email, número de pedido y el detalle que

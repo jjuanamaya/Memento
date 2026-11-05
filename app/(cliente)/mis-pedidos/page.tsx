@@ -17,7 +17,7 @@ export default async function MisPedidosPage() {
   const { data } = await supabase
     .from("pedidos")
     .select(
-      "id, total, costo_envio, estado, metodo_pago, tipo, direccion_entrega, comprobante_url, creado_en, cajas(nombre), tematicas(nombre), pedido_items(producto_id, cantidad, precio_unitario, productos(nombre))"
+      "id, total, costo_envio, estado, metodo_pago, tipo, personalizada, tipo_entrega, direccion_entrega, comentario_entrega, comprobante_url, creado_en, cajas(nombre), tematicas(nombre), pedido_items(producto_id, cantidad, precio_unitario, productos(nombre))"
     )
     .eq("usuario_id", user.id)
     .order("creado_en", { ascending: false });
@@ -30,7 +30,10 @@ export default async function MisPedidosPage() {
       estado: MiPedido["estado"];
       metodo_pago: MiPedido["metodoPago"];
       tipo: MiPedido["tipo"];
-      direccion_entrega: string;
+      personalizada: boolean | null;
+      tipo_entrega: MiPedido["tipoEntrega"] | null;
+      direccion_entrega: string | null;
+      comentario_entrega: string | null;
       comprobante_url: string | null;
       creado_en: string;
       cajas: { nombre: string } | null;
@@ -44,7 +47,10 @@ export default async function MisPedidosPage() {
       estado: p.estado,
       metodoPago: p.metodo_pago,
       tipo: p.tipo,
-      direccion: p.direccion_entrega,
+      personalizada: !!p.personalizada,
+      tipoEntrega: p.tipo_entrega ?? "envio",
+      direccion: p.direccion_entrega ?? "",
+      comentario: p.comentario_entrega ?? "",
       tieneComprobante: !!p.comprobante_url,
       creadoEn: p.creado_en,
       cajaNombre: p.cajas?.nombre ?? "Caja",
@@ -80,7 +86,7 @@ export default async function MisPedidosPage() {
           </Link>
         </div>
       ) : (
-        <MisPedidosList usuarioId={user.id} pedidosIniciales={pedidos} />
+        <MisPedidosList pedidos={pedidos} />
       )}
     </div>
   );

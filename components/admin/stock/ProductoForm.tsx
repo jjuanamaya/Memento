@@ -3,27 +3,25 @@
 import { useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Modal } from "@/components/admin/ui/Modal";
-import type { CategoriaProducto, Producto } from "@/lib/types";
-
-const CATEGORIAS: { value: CategoriaProducto; label: string }[] = [
-  { value: "snack", label: "Snack" },
-  { value: "dulce", label: "Dulce" },
-  { value: "bebida", label: "Bebida" },
-  { value: "otro", label: "Otro" },
-];
+import { mapearProducto } from "@/lib/mapeos";
+import type { CategoriaProducto, Producto, Proveedor } from "@/lib/types";
 
 interface ProductoFormProps {
   producto?: Producto;
+  categorias: CategoriaProducto[];
+  proveedores: Proveedor[];
   onClose: () => void;
   onSaved: (producto: Producto) => void;
 }
 
-export function ProductoForm({ producto, onClose, onSaved }: ProductoFormProps) {
+export function ProductoForm({ producto, categorias, proveedores, onClose, onSaved }: ProductoFormProps) {
   const esEdicion = !!producto;
 
   const [nombre, setNombre] = useState(producto?.nombre ?? "");
   const [descripcion, setDescripcion] = useState(producto?.descripcion ?? "");
-  const [categoria, setCategoria] = useState<CategoriaProducto>(producto?.categoria ?? "snack");
+  const [categoriaId, setCategoriaId] = useState(producto?.categoriaId ?? categorias[0]?.id ?? "");
+  const [proveedorId, setProveedorId] = useState(producto?.proveedorId ?? "");
+  const [costo, setCosto] = useState(producto?.costo ? String(producto.costo) : "");
   const [precio, setPrecio] = useState(String(producto?.precio ?? ""));
   const [stockActual, setStockActual] = useState(String(producto?.stockActual ?? "0"));
   const [stockMinimo, setStockMinimo] = useState(String(producto?.stockMinimo ?? "5"));
@@ -37,11 +35,20 @@ export function ProductoForm({ producto, onClose, onSaved }: ProductoFormProps) 
     setError("");
 
     const precioNum = Number(precio);
+    const costoNum = Number(costo || 0);
     const stockActualNum = Number(stockActual);
     const stockMinimoNum = Number(stockMinimo);
 
     if (!nombre.trim()) {
       setError("El nombre es obligatorio.");
+      return;
+    }
+    if (!categoriaId) {
+      setError("Elegí una categoría (podés crearlas en Stock → Categorías).");
+      return;
+    }
+    if (!Number.isFinite(costoNum) || costoNum < 0) {
+      setError("El costo tiene que ser un número válido.");
       return;
     }
     if (!Number.isFinite(precioNum) || precioNum < 0) {
@@ -63,7 +70,9 @@ export function ProductoForm({ producto, onClose, onSaved }: ProductoFormProps) 
     const payload = {
       nombre: nombre.trim(),
       descripcion: descripcion.trim() || null,
-      categoria,
+      categoria_id: categoriaId,
+      proveedor_id: proveedorId || null,
+      costo: costoNum,
       precio: precioNum,
       stock_actual: stockActualNum,
       stock_minimo: stockMinimoNum,
@@ -72,29 +81,29 @@ export function ProductoForm({ producto, onClose, onSaved }: ProductoFormProps) 
     };
 
     const resultado = esEdicion
-      ? await supabase.from("productos").update(payload).eq("id", producto!.id).select().single()
-      : await supabase.from("productos").insert(payload).select().single();
+      ? await supabase
+          .from("productos")
+          .update(payload)
+          .eq("id", producto!.id)
+          .select("*, categorias_producto(nombre)")
+          .single()
+      : await supabase.from("productos").insert(payload).select("*, categorias_producto(nombre)").single();
 
     setGuardando(false);
 
     if (resultado.error || !resultado.data) {
+      console.error("Error al guardar el producto:", resultado.error);
       setError(esEdicion ? "No se pudo guardar el producto. Probá de nuevo." : "No se pudo crear el producto. Probá de nuevo.");
       return;
     }
 
-    const p = resultado.data;
-    onSaved({
-      id: p.id,
-      nombre: p.nombre,
-      descripcion: p.descripcion ?? "",
-      precio: Number(p.precio),
-      categoria: p.categoria,
-      imagen: p.imagen_url ?? "",
-      stockActual: p.stock_actual,
-      stockMinimo: p.stock_minimo,
-      activo: p.activo,
-    });
+    onSaved(mapearProducto(resultado.data));
   }
+
+  const costoVista = Number(costo);
+  const precioVista = Number(precio);
+  const margen =
+    costoVista > 0 && precioVista > 0 ? Math.round(((precioVista - costoVista) / costoVista) * 100) : null;
 
   return (
     <Modal titulo={esEdicion ? "Editar producto" : "Nuevo producto"} onClose={onClose}>
@@ -122,25 +131,66 @@ export function ProductoForm({ producto, onClose, onSaved }: ProductoFormProps) 
           <div>
             <label htmlFor="producto-campo-3" className="mb-1 block text-xs font-medium text-muted">Categoría</label>
             <select id="producto-campo-3"
-              value={categoria}
-              onChange={(e) => setCategoria(e.target.value as CategoriaProducto)}
+              value={categoriaId}
+              onChange={(e) => setCategoriaId(e.target.value)}
               className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
             >
-              {CATEGORIAS.map((c) => (
-                <option key={c.value} value={c.value} className="bg-background">
-                  {c.label}
+              {categorias.length === 0 && (
+                <option value="" className="bg-background">
+                  Creá una categoría primero
+                </option>
+              )}
+              {categorias.map((c) => (
+                <option key={c.id} value={c.id} className="bg-background">
+                  {c.icono ? `${c.icono} ` : ""}
+                  {c.nombre}
+                  {!c.activa ? " (inactiva)" : ""}
                 </option>
               ))}
             </select>
           </div>
           <div>
-            <label htmlFor="producto-campo-4" className="mb-1 block text-xs font-medium text-muted">Precio</label>
+            <label htmlFor="producto-proveedor" className="mb-1 block text-xs font-medium text-muted">Proveedor</label>
+            <select id="producto-proveedor"
+              value={proveedorId}
+              onChange={(e) => setProveedorId(e.target.value)}
+              className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
+            >
+              <option value="" className="bg-background">
+                Sin proveedor
+              </option>
+              {proveedores.map((p) => (
+                <option key={p.id} value={p.id} className="bg-background">
+                  {p.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="producto-costo" className="mb-1 block text-xs font-medium text-muted">Costo (lo que te sale)</label>
+            <input id="producto-costo"
+              inputMode="decimal"
+              value={costo}
+              onChange={(e) => setCosto(e.target.value)}
+              placeholder="0"
+              className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
+            />
+            <p className="mt-1 text-[11px] text-muted">Con esto se calcula el precio de las cajas con temática.</p>
+          </div>
+          <div>
+            <label htmlFor="producto-campo-4" className="mb-1 block text-xs font-medium text-muted">Precio de venta</label>
             <input id="producto-campo-4"
               inputMode="decimal"
               value={precio}
               onChange={(e) => setPrecio(e.target.value)}
               className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
             />
+            <p className="mt-1 text-[11px] text-muted">
+              Lo que paga el cliente en la temática Personalizada{margen !== null ? ` · ganancia ${margen}%` : ""}.
+            </p>
           </div>
         </div>
 

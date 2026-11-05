@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SuscripcionForm } from "@/components/cliente/SuscripcionForm";
-import { fetchCajas, fetchFrecuenciasSuscripcion, fetchTematicas, fetchZonasReparto } from "@/lib/supabase/queries";
+import {
+  fetchCajas,
+  fetchConfiguracion,
+  fetchFrecuenciasSuscripcion,
+  fetchProductos,
+  fetchTematicas,
+} from "@/lib/supabase/queries";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Suscribirme — Memento" };
@@ -14,11 +20,12 @@ export default async function SuscribirsePage() {
 
   if (!user) redirect("/login?next=/suscribirse");
 
-  const [cajas, tematicas, zonas, frecuencias, perfil] = await Promise.all([
+  const [cajas, tematicas, productos, frecuencias, config, perfil] = await Promise.all([
     fetchCajas(),
     fetchTematicas(),
-    fetchZonasReparto(),
+    fetchProductos(),
     fetchFrecuenciasSuscripcion(),
+    fetchConfiguracion(),
     supabase.from("perfiles").select("telefono").eq("id", user.id).single(),
   ]);
 
@@ -26,8 +33,9 @@ export default async function SuscribirsePage() {
     <SuscripcionForm
       cajas={cajas}
       tematicas={tematicas}
-      zonas={zonas}
+      productos={productos}
       frecuencias={frecuencias}
+      config={config}
       telefonoInicial={perfil.data?.telefono ?? ""}
     />
   );

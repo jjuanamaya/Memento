@@ -4,12 +4,19 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { TematicaForm } from "@/components/admin/catalogo/TematicaForm";
 import { borrarImagenCatalogo } from "@/components/admin/catalogo/imagenCatalogo";
-import type { Tematica } from "@/lib/types";
+import type { Producto, Tematica } from "@/lib/types";
 
 type ModalState = { tipo: "crear" } | { tipo: "editar"; tematica: Tematica } | null;
 
-export function TematicasTable({ tematicasIniciales }: { tematicasIniciales: Tematica[] }) {
+export function TematicasTable({
+  tematicasIniciales,
+  productos,
+}: {
+  tematicasIniciales: Tematica[];
+  productos: Producto[];
+}) {
   const [tematicas, setTematicas] = useState(tematicasIniciales);
+  const productoPorId = new Map(productos.map((p) => [p.id, p]));
   const [modal, setModal] = useState<ModalState>(null);
   const [eliminando, setEliminando] = useState<string | null>(null);
   const [mensaje, setMensaje] = useState("");
@@ -77,7 +84,9 @@ export function TematicasTable({ tematicasIniciales }: { tematicasIniciales: Tem
   return (
     <div>
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm text-muted">Las temáticas con las que se arma o sortea cada caja.</p>
+        <p className="text-sm text-muted">
+          Cada temática define con qué productos se llena la caja. Los precios por tamaño los ves en Cajas.
+        </p>
         <button
           onClick={() => setModal({ tipo: "crear" })}
           className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-brand-foreground hover:opacity-90"
@@ -115,8 +124,22 @@ export function TematicasTable({ tematicasIniciales }: { tematicasIniciales: Tem
                 </span>
               </div>
               <p className="mt-1 text-sm text-muted">{t.descripcion || "Sin descripción."}</p>
+              {t.personalizada ? (
+                <p className="mt-2 text-xs text-brand">El cliente elige cada producto.</p>
+              ) : t.productoIds.length === 0 ? (
+                <p className="mt-2 text-xs text-yellow-400">⚠️ Sin productos: los clientes no pueden pedirla.</p>
+              ) : (
+                <p className="mt-2 text-xs text-muted">
+                  Se llena con:{" "}
+                  {t.productoIds
+                    .map((id) => productoPorId.get(id))
+                    .filter(Boolean)
+                    .map((p) => (p!.stockActual > 0 ? p!.nombre : `${p!.nombre} (sin stock)`))
+                    .join(", ")}
+                </p>
+              )}
 
-              <div className="mt-4 flex gap-2">
+              <div className="mt-auto flex gap-2 pt-4">
                 <button
                   aria-label={`Editar ${t.nombre}`}
                   onClick={() => setModal({ tipo: "editar", tematica: t })}
@@ -127,7 +150,8 @@ export function TematicasTable({ tematicasIniciales }: { tematicasIniciales: Tem
                 <button
                   aria-label={`Eliminar ${t.nombre}`}
                   onClick={() => eliminarTematica(t)}
-                  disabled={eliminando === t.id}
+                  disabled={eliminando === t.id || t.personalizada}
+                  title={t.personalizada ? "La temática Personalizada no se puede eliminar" : undefined}
                   className="flex-1 rounded-lg border border-red-400/40 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 disabled:opacity-50"
                 >
                   {eliminando === t.id ? "..." : "Eliminar"}
@@ -138,9 +162,16 @@ export function TematicasTable({ tematicasIniciales }: { tematicasIniciales: Tem
         </div>
       )}
 
-      {modal?.tipo === "crear" && <TematicaForm onClose={() => setModal(null)} onSaved={guardarTematica} />}
+      {modal?.tipo === "crear" && (
+        <TematicaForm productos={productos} onClose={() => setModal(null)} onSaved={guardarTematica} />
+      )}
       {modal?.tipo === "editar" && (
-        <TematicaForm tematica={modal.tematica} onClose={() => setModal(null)} onSaved={guardarTematica} />
+        <TematicaForm
+          tematica={modal.tematica}
+          productos={productos}
+          onClose={() => setModal(null)}
+          onSaved={guardarTematica}
+        />
       )}
     </div>
   );

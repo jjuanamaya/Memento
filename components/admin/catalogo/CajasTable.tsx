@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { CajaForm } from "@/components/admin/catalogo/CajaForm";
 import { borrarImagenCatalogo } from "@/components/admin/catalogo/imagenCatalogo";
-import type { Caja } from "@/lib/types";
+import { MOTIVO_COTIZACION, type Caja, type Cotizacion, type Tematica } from "@/lib/types";
 
 type ModalState = { tipo: "crear" } | { tipo: "editar"; caja: Caja } | null;
 
@@ -12,12 +13,23 @@ function formatoMoneda(valor: number) {
   return `$${Math.round(valor).toLocaleString("es-AR")}`;
 }
 
-export function CajasTable({ cajasIniciales }: { cajasIniciales: Caja[] }) {
+export function CajasTable({
+  cajasIniciales,
+  tematicas,
+  cotizaciones,
+}: {
+  cajasIniciales: Caja[];
+  tematicas: Tematica[];
+  cotizaciones: Cotizacion[];
+}) {
+  const router = useRouter();
   const [cajas, setCajas] = useState(cajasIniciales);
   const [modal, setModal] = useState<ModalState>(null);
   const [eliminando, setEliminando] = useState<string | null>(null);
   const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
+
+  const nombreTematica = new Map(tematicas.map((t) => [t.id, t.nombre]));
 
   function guardarCaja(actualizada: Caja) {
     setCajas((prev) => {
@@ -28,6 +40,8 @@ export function CajasTable({ cajasIniciales }: { cajasIniciales: Caja[] }) {
     setModal(null);
     setMensaje(`"${actualizada.nombre}" se guardó correctamente.`);
     setError("");
+    // Los precios por temática los calcula la base: se vuelven a pedir.
+    router.refresh();
   }
 
   async function eliminarCaja(caja: Caja) {
@@ -78,7 +92,10 @@ export function CajasTable({ cajasIniciales }: { cajasIniciales: Caja[] }) {
   return (
     <div>
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm text-muted">Los tamaños de caja que ven los clientes al armar su regalo o suscribirse.</p>
+        <p className="text-sm text-muted">
+          Cada caja es un tamaño. Con una temática se llena sola con los productos de esa temática y el precio se
+          calcula solo: costo de esos productos + % de ganancia.
+        </p>
         <button
           onClick={() => setModal({ tipo: "crear" })}
           className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-brand-foreground hover:opacity-90"
@@ -115,9 +132,34 @@ export function CajasTable({ cajasIniciales }: { cajasIniciales: Caja[] }) {
                   {c.activa ? "Activa" : "Inactiva"}
                 </span>
               </div>
-              <p className="mt-1 text-sm text-muted">{c.descripcion || "Sin descripción."}</p>
-              <p className="mt-2 text-sm text-muted">Capacidad: {c.capacidad || "—"} productos</p>
-              <p className="mt-2 font-semibold text-brand">{formatoMoneda(c.precio)}</p>
+              <p className="mt-2 text-sm text-muted">{c.descripcion || "Sin descripción."}</p>
+              <p className="mt-2 text-sm text-muted">
+                {c.capacidad || "—"} productos · ganancia {c.gananciaPorcentaje}%
+              </p>
+              <p className="text-xs text-muted">Personalizada: base {formatoMoneda(c.precio)} + productos</p>
+
+              <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-muted">Precio por temática</p>
+              <ul className="mt-1 space-y-0.5 text-sm">
+                {cotizaciones
+                  .filter((cot) => cot.cajaId === c.id)
+                  .map((cot) => (
+                    <li key={cot.tematicaId} className="flex justify-between gap-2">
+                      <span className="truncate text-muted">{nombreTematica.get(cot.tematicaId) ?? "Temática"}</span>
+                      {cot.estado === "disponible" ? (
+                        <span className="flex-shrink-0 font-medium text-brand">{formatoMoneda(cot.precio)}</span>
+                      ) : (
+                        <span className="flex-shrink-0 text-xs text-yellow-400">
+                          {cot.estado === "sin_precio"
+                            ? "Falta cargar costos"
+                            : cot.estado === "sin_contenido"
+                              ? "Temática sin productos"
+                              : MOTIVO_COTIZACION[cot.estado]}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+              </ul>
+              <div className="mt-auto" />
 
               <div className="mt-4 flex gap-2">
                 <button

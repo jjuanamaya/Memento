@@ -74,7 +74,7 @@ export default async function AdminDashboardPage() {
 
       <div className="mt-4 rounded-xl border border-border bg-surface p-6">
         <p className="text-sm font-medium">Pedidos en curso</p>
-        <p className="mt-1 text-xs text-muted">Confirmados, en preparación o en camino — los que necesitan atención ahora.</p>
+        <p className="mt-1 text-xs text-muted">Confirmados o en camino — los que necesitan atención ahora.</p>
 
         {data.pedidosEnCurso.length === 0 ? (
           <p className="mt-6 text-sm text-muted">No hay ningún pedido en curso en este momento. 🎉</p>
@@ -101,7 +101,7 @@ export default async function AdminDashboardPage() {
         <div className="rounded-xl border border-border bg-surface p-5">
           <p className="text-sm text-muted">📦 Pedidos nuevos hoy</p>
           <p className="mt-2 text-2xl font-semibold">{data.pedidosHoy}</p>
-          <p className="mt-1 text-xs text-muted">{data.pedidosArmados} sin confirmar (últimos 30 días)</p>
+          <p className="mt-1 text-xs text-muted">{data.pedidosPorDespachar} confirmados sin despachar (30 días)</p>
         </div>
         <div className="rounded-xl border border-border bg-surface p-5">
           <p className="text-sm text-muted">💰 Ingresos de hoy</p>
@@ -199,6 +199,12 @@ export default async function AdminDashboardPage() {
           <div>
             <p className="text-xl font-semibold text-brand">{data.suscripcionesPorRenovar}</p>
             <p className="text-xs text-muted">renuevan en 7 días</p>
+          </div>
+          <div>
+            <p className={`text-xl font-semibold ${data.suscripcionesAdeudadas > 0 ? "text-red-400" : ""}`}>
+              {data.suscripcionesAdeudadas}
+            </p>
+            <p className="text-xs text-muted">adeudan pagos</p>
           </div>
         </div>
         <Link href="/admin/suscripciones" className="mt-4 inline-block text-xs text-brand hover:opacity-80">

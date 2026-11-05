@@ -7,7 +7,7 @@ const tabs = [
   { href: "/admin/catalogo", label: "Cajas" },
   { href: "/admin/catalogo/tematicas", label: "Temáticas" },
   { href: "/admin/catalogo/frecuencias", label: "Frecuencias de envío" },
-  { href: "/admin/catalogo/zonas", label: "Zonas de reparto" },
+  { href: "/admin/catalogo/envio", label: "Envío y pagos" },
 ];
 
 export function CatalogoTabs() {

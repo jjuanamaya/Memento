@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { fetchCajas, fetchFrecuenciasSuscripcion } from "@/lib/supabase/queries";
+import {
+  fetchCajas,
+  fetchConfiguracion,
+  fetchCotizaciones,
+  fetchFrecuenciasSuscripcion,
+} from "@/lib/supabase/queries";
+import type { Configuracion } from "@/lib/types";
 
 function formatoMoneda(valor: number) {
   return `$${Math.round(valor).toLocaleString("es-AR")}`;
@@ -8,70 +14,113 @@ function formatoMoneda(valor: number) {
 const PASOS = [
   {
     numero: "01",
-    titulo: "Elegí tu caja",
-    texto: "Elegí el tamaño según cuánto quieras sorprender.",
+    titulo: "Elegí tamaño y temática",
+    texto: "La llenamos con los productos de la temática, o elegí Personalizada y armala producto por producto.",
   },
   {
     numero: "02",
-    titulo: "Llenala a tu gusto",
-    texto: "Snacks, dulces y bebidas: vos decidís qué va adentro.",
+    titulo: "Decinos cómo la recibís",
+    texto: "Te la llevamos a domicilio o la retirás en el local, y pagás por transferencia o en efectivo.",
   },
   {
     numero: "03",
-    titulo: "Nosotros la llevamos",
-    texto: "Coordinamos con vos la entrega a domicilio.",
+    titulo: "Nosotros la preparamos",
+    texto: "La armamos con cuidado y coordinamos con vos la entrega o el retiro.",
   },
 ];
 
 const VALORES = [
   {
     icono: "✍️",
-    titulo: "Hecha a tu medida",
-    texto: "Nada de combos cerrados: el contenido lo elegís vos, pensando en esa persona.",
+    titulo: "Lista o a tu medida",
+    texto: "Elegí una temática y te la llenamos con todo pensado, o armala vos con los productos que quieras.",
   },
   {
     icono: "📍",
-    titulo: "Entrega en Cañada de Gómez",
-    texto: "Coordinamos la entrega a domicilio dentro de la ciudad.",
+    titulo: "Envío o retiro en Cañada de Gómez",
+    texto: "Un único costo de envío para toda la ciudad, o retirala sin cargo en nuestro local.",
   },
   {
     icono: "💳",
     titulo: "Pagás como prefieras",
-    texto: "Por transferencia o en efectivo al recibir la caja.",
+    texto: "Por transferencia (subís el comprobante al pedir) o en efectivo al recibir o retirar.",
   },
 ];
 
-const PREGUNTAS = [
-  {
-    pregunta: "¿Dónde entregan?",
-    respuesta:
-      "Por ahora repartimos en Cañada de Gómez. Al hacer el pedido cargás la dirección y te contactamos para coordinar la entrega.",
-  },
-  {
-    pregunta: "¿Cómo pago?",
-    respuesta:
-      "Por transferencia (podés subir el comprobante al hacer el pedido) o en efectivo cuando recibís la caja.",
-  },
-  {
-    pregunta: "¿Puedo elegir qué va adentro?",
-    respuesta: "Sí. Elegís el tamaño de la caja y después sumás los productos que quieras hasta completarla.",
-  },
-  {
-    pregunta: "¿Puedo pausar o cancelar la suscripción?",
-    respuesta: "Sí, desde \"Mis suscripciones\" la pausás, la reactivás o la cancelás cuando quieras.",
-  },
-  {
-    pregunta: "¿Y si me arrepiento de la compra?",
-    respuesta:
-      "Tenés 10 días corridos para arrepentirte. Lo pedís desde el \"Botón de arrepentimiento\", sin registrarte. Los detalles están en la política de cambios y devoluciones.",
-  },
-];
+function preguntasFrecuentes(config: Configuracion) {
+  const envio = config.costoEnvio > 0 ? `cuesta ${formatoMoneda(config.costoEnvio)}` : "es sin cargo";
+  const local = config.direccionLocal
+    ? `en ${config.direccionLocal}${config.horarioRetiro ? ` (${config.horarioRetiro})` : ""}`
+    : "en nuestro local (te pasamos la dirección al confirmar)";
+
+  return [
+    {
+      pregunta: "¿Cómo armo mi caja?",
+      respuesta:
+        "Elegís el tamaño de la caja (cuántos productos lleva) y una temática. Nosotros la llenamos con los productos de esa temática: antes de pedir ves exactamente qué trae y el precio final. Si preferís elegir vos cada producto, elegí la temática \"Personalizada\".",
+    },
+    {
+      pregunta: "¿Cuánto sale el envío?",
+      respuesta: `El envío a domicilio dentro de Cañada de Gómez ${envio}, sin importar la zona. Si preferís, la retirás en el local sin cargo. En el último paso ves el subtotal, el envío y el total antes de confirmar.`,
+    },
+    {
+      pregunta: "¿Puedo retirarla yo?",
+      respuesta: `Sí. Al hacer el pedido elegí "Retiro en el local" y la retirás ${local}. Te avisamos cuando está lista.`,
+    },
+    {
+      pregunta: "¿Puedo dejar indicaciones para la entrega?",
+      respuesta:
+        "Sí. Además de la dirección hay un campo opcional para indicaciones, por ejemplo \"casa de la esquina con reja negra, timbre 2\".",
+    },
+    {
+      pregunta: "¿Cómo pago?",
+      respuesta:
+        "Por transferencia o en efectivo. Si elegís transferencia, en el último paso te mostramos el alias y el CBU: hacés la transferencia, subís el comprobante y recién ahí se confirma el pedido. En efectivo pagás al recibir o al retirar la caja.",
+    },
+    {
+      pregunta: "¿Cómo funciona la suscripción?",
+      respuesta:
+        "Elegís el tamaño de la caja, al menos dos temáticas que te gusten y cada cuánto querés recibirla. En cada entrega te llega una temática al azar entre las que elegiste, sin repetir hasta que salgan todas.",
+    },
+    {
+      pregunta: "¿Cómo pago la suscripción?",
+      respuesta:
+        "Se paga por período. Por transferencia: subís el comprobante del primer período al suscribirte y los siguientes desde \"Mis suscripciones\", donde también ves si estás al día. En efectivo: pagás en cada entrega. Si un período queda impago, podemos pausar la suscripción hasta regularizarlo.",
+    },
+    {
+      pregunta: "¿Puedo pausar o cancelar la suscripción?",
+      respuesta:
+        "Sí, desde \"Mis suscripciones\" la pausás, la reactivás o la cancelás cuando quieras. Mientras está pausada no corren los días de entrega ni de pago.",
+    },
+    {
+      pregunta: "¿Qué pasa si un producto se agota?",
+      respuesta:
+        "Llenamos la caja con los productos de la temática que tengamos en stock. Si no alcanza para llenar un tamaño, esa temática aparece como \"sin stock\" para ese tamaño hasta que reponemos. En la Personalizada solo podés sumar productos con stock.",
+    },
+    {
+      pregunta: "¿Y si me arrepiento de la compra?",
+      respuesta:
+        "Tenés 10 días corridos para arrepentirte. Lo pedís desde el \"Botón de arrepentimiento\", sin registrarte. Los detalles están en la política de cambios y devoluciones.",
+    },
+  ];
+}
 
 export default async function HomePage() {
-  const [cajas, frecuencias] = await Promise.all([fetchCajas(), fetchFrecuenciasSuscripcion()]);
+  const [cajas, cotizaciones, frecuencias, config] = await Promise.all([
+    fetchCajas(),
+    fetchCotizaciones(),
+    fetchFrecuenciasSuscripcion(),
+    fetchConfiguracion(),
+  ]);
   const fotos = cajas.filter((c) => c.imagen).slice(0, 3);
-  const precioDesde = cajas.length ? Math.min(...cajas.map((c) => c.precio)) : null;
+  const disponibles = cotizaciones.filter((c) => c.estado === "disponible");
+  const desdeDe = (cajaId: string) => {
+    const precios = disponibles.filter((c) => c.cajaId === cajaId).map((c) => c.precio);
+    return precios.length ? Math.min(...precios) : null;
+  };
+  const precioDesde = disponibles.length ? Math.min(...disponibles.map((c) => c.precio)) : null;
   const suscripcionDesde = frecuencias.length ? Math.min(...frecuencias.map((f) => f.precio)) : null;
+  const preguntas = preguntasFrecuentes(config);
 
   return (
     <div>
@@ -87,8 +136,8 @@ export default async function HomePage() {
               Regalá un momento, no un objeto.
             </h1>
             <p className="animate-fade-in-up mt-6 max-w-md text-lg text-muted [animation-delay:160ms]">
-              En Memento armás una caja de regalo a medida: vos elegís qué va adentro, nosotros la preparamos y la
-              llevamos a domicilio en Cañada de Gómez.
+              En Memento elegís una caja de regalo lista o la armás a tu medida. Nosotros la preparamos y te la
+              llevamos en Cañada de Gómez, o la retirás en el local.
             </p>
             <div className="animate-fade-in-up mt-8 flex flex-wrap items-center gap-3 [animation-delay:240ms]">
               <Link
@@ -106,10 +155,10 @@ export default async function HomePage() {
             </div>
             <ul className="animate-fade-in-up mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted [animation-delay:320ms]">
               <li>
-                <span aria-hidden="true">✓ </span>Armada a tu gusto
+                <span aria-hidden="true">✓ </span>Lista o a tu gusto
               </li>
               <li>
-                <span aria-hidden="true">✓ </span>Entrega a domicilio
+                <span aria-hidden="true">✓ </span>Envío o retiro en el local
               </li>
               <li>
                 <span aria-hidden="true">✓ </span>Transferencia o efectivo
@@ -217,7 +266,9 @@ export default async function HomePage() {
           </div>
           <p className="mt-2 text-xs text-muted">Imágenes ilustrativas: la presentación final puede variar.</p>
           <div className="mt-10 grid gap-6 sm:grid-cols-3">
-            {cajas.map((caja) => (
+            {cajas.map((caja) => {
+              const desde = desdeDe(caja.id);
+              return (
               <Link
                 key={caja.id}
                 href="/armar"
@@ -242,18 +293,19 @@ export default async function HomePage() {
                 <div className="p-6">
                   <div className="flex items-baseline justify-between gap-3">
                     <h3 className="text-lg font-semibold">{caja.nombre}</h3>
-                    <span className="font-semibold text-brand">{formatoMoneda(caja.precio)}</span>
+                    {desde !== null && (
+                      <span className="text-sm font-semibold text-brand">Desde {formatoMoneda(desde)}</span>
+                    )}
                   </div>
                   <p className="mt-1 text-sm text-muted">{caja.descripcion}</p>
-                  {caja.capacidad > 0 && (
-                    <p className="mt-3 text-xs text-muted">Hasta {caja.capacidad} productos</p>
-                  )}
+                  <p className="mt-3 text-xs text-muted">Lleva {caja.capacidad} productos de la temática que elijas</p>
                   <p className="mt-5 text-sm font-medium text-brand transition-transform group-hover:translate-x-1">
                     Armar esta caja <span aria-hidden="true">→</span>
                   </p>
                 </div>
               </Link>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}
@@ -292,7 +344,7 @@ export default async function HomePage() {
       <section className="mx-auto max-w-3xl px-6 pb-24">
         <h2 className="text-center text-3xl font-semibold tracking-tight">Preguntas frecuentes</h2>
         <div className="mt-10 divide-y divide-border rounded-2xl border border-border bg-surface">
-          {PREGUNTAS.map((item) => (
+          {preguntas.map((item) => (
             <details key={item.pregunta} className="group px-6 py-5">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium">
                 {item.pregunta}

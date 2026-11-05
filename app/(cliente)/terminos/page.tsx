@@ -35,8 +35,8 @@ export default function TerminosPage() {
       <ul>
         <li>Los precios están expresados en pesos argentinos y son precios finales.</li>
         <li>
-          El costo de envío depende de la zona de reparto y se muestra antes de que confirmes el pedido. El total que ves
-          al confirmar es el que vas a pagar.
+          El envío a domicilio tiene un costo único para toda la ciudad, que se muestra antes de que confirmes el
+          pedido. Retirar en el local no tiene cargo. El total que ves al confirmar es el que vas a pagar.
         </li>
         <li>
           Las imágenes de las cajas y productos son ilustrativas: el envase, los colores o la presentación pueden variar.
@@ -53,23 +53,25 @@ export default function TerminosPage() {
 
       <h2>4. Cómo se hace un pedido</h2>
       <p>
-        Elegís una caja, una temática y los productos que quieras, cargás la dirección de entrega y el medio de pago, y
-        confirmás. Al confirmar, el pedido queda registrado en tu cuenta (sección &quot;Mis pedidos&quot;) y nos
-        comunicamos con vos para coordinar la entrega.
+        Elegís el tamaño de la caja y una temática (la llenamos con productos de esa temática y te mostramos el
+        contenido y el precio antes de confirmar) o la temática Personalizada (en la que elegís cada producto),
+        indicás si la querés con envío a domicilio o la retirás en el local, elegís el medio de pago y confirmás. Al
+        confirmar, el pedido queda registrado en tu cuenta (sección &quot;Mis pedidos&quot;) y nos comunicamos con vos
+        para coordinar la entrega o el retiro.
       </p>
 
       <h2>5. Pagos</h2>
       <p>
-        Aceptamos transferencia bancaria o efectivo al momento de la entrega. En el sitio no se cargan datos de tarjetas
-        ni cuentas bancarias. Si pagás por transferencia, podés adjuntar el comprobante al hacer el pedido o mandarlo
-        después.
+        Aceptamos transferencia bancaria o efectivo al momento de la entrega o del retiro. En el sitio no se cargan datos
+        de tarjetas ni cuentas bancarias. Si pagás por transferencia, te mostramos los datos de la cuenta y tenés que
+        adjuntar el comprobante para confirmar el pedido.
       </p>
 
       <h2>6. Entregas</h2>
       <p>
-        Por ahora entregamos a domicilio dentro de {NEGOCIO.localidad.split(",")[0]}. La fecha y la franja horaria se
-        coordinan con vos después de confirmar el pedido. Si no podemos entregar en lo acordado, nos comunicamos para
-        reprogramar.
+        Por ahora entregamos a domicilio dentro de {NEGOCIO.localidad.split(",")[0]}, o podés retirar el pedido en
+        nuestro local. La fecha y la franja horaria se coordinan con vos después de confirmar el pedido. Si no podemos
+        entregar en lo acordado, nos comunicamos para reprogramar.
       </p>
 
       <h2>7. Suscripciones</h2>
@@ -85,6 +87,11 @@ export default function TerminosPage() {
         <li>
           En cada entrega te llega una temática al azar entre las que elegiste, sin repetir hasta que hayan salido
           todas.
+        </li>
+        <li>
+          La suscripción se paga por período. Si pagás por transferencia, adjuntás el comprobante del primer período al
+          suscribirte y los siguientes desde &quot;Mis suscripciones&quot;. Si un período queda impago, podemos pausar
+          la suscripción hasta que se regularice; mientras está pausada no se generan entregas ni cobros.
         </li>
       </ul>
 

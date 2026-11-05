@@ -15,7 +15,7 @@ export const NEGOCIO = {
   dataFiscalImagenUrl: "",
 };
 
-export const ULTIMA_ACTUALIZACION_LEGAL = "1 de octubre de 2026";
+export const ULTIMA_ACTUALIZACION_LEGAL = "3 de noviembre de 2026";
 
 // Dirección pública del sitio (se usa para el sitemap). Cambiala si algún
 // día usás un dominio propio, por ejemplo https://memento.com.ar

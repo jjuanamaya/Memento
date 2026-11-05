@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SuscripcionesList } from "@/components/cliente/SuscripcionesList";
 import { createClient } from "@/lib/supabase/server";
-import type { EstadoSuscripcion } from "@/lib/types";
+import { fetchConfiguracion } from "@/lib/supabase/queries";
+import { mapearSuscripcion, SELECT_SUSCRIPCION } from "@/lib/mapeos";
+import { claveDia } from "@/lib/fechas";
 
 export const metadata: Metadata = { title: "Mis suscripciones — Memento" };
 
@@ -14,34 +16,18 @@ export default async function MisSuscripcionesPage() {
 
   if (!user) redirect("/login?next=/mis-suscripciones");
 
-  const { data } = await supabase
-    .from("suscripciones")
-    .select("id, frecuencia_dias, precio, proxima_entrega, estado, cajas(nombre), suscripcion_tematicas(tematicas(nombre))")
-    .eq("usuario_id", user.id)
-    .order("creado_en", { ascending: false });
+  const [{ data, error }, config] = await Promise.all([
+    supabase
+      .from("suscripciones")
+      .select(SELECT_SUSCRIPCION)
+      .eq("usuario_id", user.id)
+      .order("creado_en", { ascending: false }),
+    fetchConfiguracion(),
+  ]);
 
-  const suscripciones = (data ?? []).map((row) => {
-    const s = row as unknown as {
-      id: string;
-      frecuencia_dias: number;
-      precio: number;
-      proxima_entrega: string | null;
-      estado: EstadoSuscripcion;
-      cajas: { nombre: string } | null;
-      suscripcion_tematicas: { tematicas: { nombre: string } | null }[];
-    };
+  if (error) console.error("Error al cargar suscripciones:", error);
 
-    return {
-      id: s.id,
-      cajaId: "",
-      cajaNombre: s.cajas?.nombre ?? "Caja",
-      precio: Number(s.precio ?? 0),
-      frecuenciaDias: s.frecuencia_dias,
-      proximaEntrega: s.proxima_entrega,
-      estado: s.estado,
-      tematicas: s.suscripcion_tematicas.map((st) => st.tematicas?.nombre).filter(Boolean) as string[],
-    };
-  });
+  const suscripciones = (data ?? []).map((row) => mapearSuscripcion(row as unknown as Record<string, unknown>));
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-12">
@@ -49,7 +35,7 @@ export default async function MisSuscripcionesPage() {
       <p className="animate-fade-in-up mt-1 text-sm text-muted [animation-delay:60ms]">
         Cada entrega es una sorpresa entre las temáticas que elegiste.
       </p>
-      <SuscripcionesList suscripcionesIniciales={suscripciones} />
+      <SuscripcionesList suscripcionesIniciales={suscripciones} config={config} hoy={claveDia(new Date())} />
     </div>
   );
 }

@@ -4,7 +4,11 @@ import { useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Modal } from "@/components/admin/ui/Modal";
 import { borrarImagenCatalogo, subirImagenCatalogo } from "@/components/admin/catalogo/imagenCatalogo";
+import { mapearCaja } from "@/lib/mapeos";
 import type { Caja } from "@/lib/types";
+
+const INPUT =
+  "w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand";
 
 interface CajaFormProps {
   caja?: Caja;
@@ -17,8 +21,9 @@ export function CajaForm({ caja, onClose, onSaved }: CajaFormProps) {
 
   const [nombre, setNombre] = useState(caja?.nombre ?? "");
   const [descripcion, setDescripcion] = useState(caja?.descripcion ?? "");
-  const [precio, setPrecio] = useState(String(caja?.precio ?? ""));
-  const [capacidad, setCapacidad] = useState(String(caja?.capacidad ?? ""));
+  const [capacidad, setCapacidad] = useState(String(caja?.capacidad || ""));
+  const [ganancia, setGanancia] = useState(String(caja?.gananciaPorcentaje ?? 40));
+  const [precioBase, setPrecioBase] = useState(String(caja?.precio ?? "0"));
   const [imagenUrl, setImagenUrl] = useState(caja?.imagen ?? "");
   const [archivoNuevo, setArchivoNuevo] = useState<File | null>(null);
   const [previsualizacion, setPrevisualizacion] = useState(caja?.imagen ?? "");
@@ -44,19 +49,24 @@ export function CajaForm({ caja, onClose, onSaved }: CajaFormProps) {
     e.preventDefault();
     setError("");
 
-    const precioNum = Number(precio);
-    const capacidadNum = capacidad.trim() ? Number(capacidad) : null;
+    const capacidadNum = Number(capacidad);
+    const gananciaNum = Number(ganancia);
+    const precioBaseNum = Number(precioBase || 0);
 
     if (!nombre.trim()) {
       setError("El nombre es obligatorio.");
       return;
     }
-    if (!Number.isFinite(precioNum) || precioNum < 0) {
-      setError("El precio tiene que ser un número válido.");
+    if (!Number.isInteger(capacidadNum) || capacidadNum <= 0) {
+      setError("Indicá cuántos productos lleva la caja (un número entero mayor a 0).");
       return;
     }
-    if (capacidadNum !== null && (!Number.isInteger(capacidadNum) || capacidadNum < 0)) {
-      setError("La capacidad tiene que ser un número entero, mayor o igual a 0.");
+    if (!Number.isFinite(gananciaNum) || gananciaNum < 0 || gananciaNum > 1000) {
+      setError("El % de ganancia tiene que ser un número entre 0 y 1000.");
+      return;
+    }
+    if (!Number.isFinite(precioBaseNum) || precioBaseNum < 0) {
+      setError("El precio base tiene que ser un número válido.");
       return;
     }
 
@@ -85,8 +95,9 @@ export function CajaForm({ caja, onClose, onSaved }: CajaFormProps) {
     const payload = {
       nombre: nombre.trim(),
       descripcion: descripcion.trim() || null,
-      precio: precioNum,
       capacidad: capacidadNum,
+      ganancia_porcentaje: gananciaNum,
+      precio: precioBaseNum,
       imagen_url: urlFinal || null,
       activa,
     };
@@ -98,20 +109,12 @@ export function CajaForm({ caja, onClose, onSaved }: CajaFormProps) {
     setGuardando(false);
 
     if (resultado.error || !resultado.data) {
+      console.error("Error al guardar la caja:", resultado.error);
       setError(esEdicion ? "No se pudo guardar la caja. Probá de nuevo." : "No se pudo crear la caja. Probá de nuevo.");
       return;
     }
 
-    const c = resultado.data;
-    onSaved({
-      id: c.id,
-      nombre: c.nombre,
-      descripcion: c.descripcion ?? "",
-      precio: Number(c.precio),
-      capacidad: c.capacidad ?? 0,
-      imagen: c.imagen_url ?? "",
-      activa: c.activa,
-    });
+    onSaved(mapearCaja(resultado.data));
   }
 
   return (
@@ -119,49 +122,78 @@ export function CajaForm({ caja, onClose, onSaved }: CajaFormProps) {
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label htmlFor="caja-campo-1" className="mb-1 block text-xs font-medium text-muted">Nombre</label>
-          <input id="caja-campo-1"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
-          />
+          <input id="caja-campo-1" value={nombre} onChange={(e) => setNombre(e.target.value)} className={INPUT} />
         </div>
 
         <div>
           <label htmlFor="caja-campo-2" className="mb-1 block text-xs font-medium text-muted">Descripción</label>
-          <textarea id="caja-campo-2"
+          <textarea
+            id="caja-campo-2"
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
             rows={2}
-            className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
+            placeholder="Ej: Ideal para un detalle: 10 productos de la temática que elijas."
+            className={INPUT}
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="caja-campo-3" className="mb-1 block text-xs font-medium text-muted">Precio</label>
-            <input id="caja-campo-3"
-              inputMode="decimal"
-              value={precio}
-              onChange={(e) => setPrecio(e.target.value)}
-              className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
-            />
-          </div>
-          <div>
-            <label htmlFor="caja-campo-4" className="mb-1 block text-xs font-medium text-muted">Capacidad (productos)</label>
-            <input id="caja-campo-4"
+            <label htmlFor="caja-campo-4" className="mb-1 block text-xs font-medium text-muted">
+              Capacidad (productos)
+            </label>
+            <input
+              id="caja-campo-4"
               inputMode="numeric"
               value={capacidad}
               onChange={(e) => setCapacidad(e.target.value)}
-              className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
+              className={INPUT}
+            />
+          </div>
+          <div>
+            <label htmlFor="caja-ganancia" className="mb-1 block text-xs font-medium text-muted">
+              % de ganancia
+            </label>
+            <input
+              id="caja-ganancia"
+              inputMode="decimal"
+              value={ganancia}
+              onChange={(e) => setGanancia(e.target.value)}
+              className={INPUT}
             />
           </div>
         </div>
+        <p className="-mt-2 text-[11px] text-muted">
+          Con una temática, la caja se llena sola hasta su capacidad y cuesta: costo de esos productos + este %.
+        </p>
 
         <div>
-          <label htmlFor="caja-foto" className="mb-1 block text-xs font-medium text-muted">Foto de la caja</label>
+          <label htmlFor="caja-precio-base" className="mb-1 block text-xs font-medium text-muted">
+            Precio base para la temática Personalizada
+          </label>
+          <input
+            id="caja-precio-base"
+            inputMode="decimal"
+            value={precioBase}
+            onChange={(e) => setPrecioBase(e.target.value)}
+            className={INPUT}
+          />
+          <p className="mt-1 text-[11px] text-muted">
+            Lo que cuesta la caja vacía; se suma al precio de los productos que elija el cliente. Puede ser $0.
+          </p>
+        </div>
+
+        <div>
+          <label htmlFor="caja-foto" className="mb-1 block text-xs font-medium text-muted">
+            Foto de la caja (opcional)
+          </label>
           {previsualizacion ? (
             <div className="mb-2 flex items-center gap-3">
-              <img src={previsualizacion} alt="Vista previa de la foto" className="h-20 w-20 rounded-lg border border-border object-cover" />
+              <img
+                src={previsualizacion}
+                alt="Vista previa de la foto"
+                className="h-20 w-20 rounded-lg border border-border object-cover"
+              />
               <button
                 type="button"
                 onClick={quitarImagen}
@@ -171,7 +203,7 @@ export function CajaForm({ caja, onClose, onSaved }: CajaFormProps) {
               </button>
             </div>
           ) : (
-            <p className="mb-2 text-xs text-muted">Todavía no hay foto cargada.</p>
+            <p className="mb-2 text-xs text-muted">Sin foto: se muestra un ícono.</p>
           )}
           <input
             id="caja-foto"

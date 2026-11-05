@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 const DESCRIPCION =
-  "Cajas de regalo armadas a tu medida con snacks, dulces y bebidas, entregadas a domicilio en Cañada de Gómez.";
+  "Cajas de regalo listas o armadas a tu medida con snacks, dulces y bebidas. Envío a domicilio o retiro en Cañada de Gómez.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITIO_URL),

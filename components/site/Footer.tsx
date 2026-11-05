@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LINK_DEFENSA_CONSUMIDOR, NEGOCIO, dato } from "@/lib/negocio";
+import { LINK_DEFENSA_CONSUMIDOR, NEGOCIO } from "@/lib/negocio";
 
 const LINKS_LEGALES = [
   { href: "/terminos", label: "Términos y condiciones" },
@@ -12,7 +12,7 @@ const LINKS_LEGALES = [
 export function Footer() {
   return (
     <footer className="border-t border-border">
-      <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 text-sm sm:grid-cols-3">
+      <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 text-sm sm:grid-cols-2">
         <div>
           <p className="font-semibold tracking-wide text-foreground">MEMENTO</p>
           <p className="mt-2 text-muted">Cajas de regalo en {NEGOCIO.localidad.split(",")[0]}.</p>
@@ -30,19 +30,6 @@ export function Footer() {
             ))}
           </ul>
         </nav>
-
-        <div>
-          <p className="font-semibold text-foreground">Datos del negocio</p>
-          <ul className="mt-3 space-y-1 text-muted">
-            <li>Titular: {dato(NEGOCIO.titular)}</li>
-            <li>CUIT: {dato(NEGOCIO.cuit)}</li>
-            <li>
-              {dato(NEGOCIO.domicilio)}, {NEGOCIO.localidad}
-            </li>
-            <li>Email: {dato(NEGOCIO.email)}</li>
-            <li>Teléfono: {dato(NEGOCIO.telefono)}</li>
-          </ul>
-        </div>
       </div>
 
       <div className="border-t border-border">

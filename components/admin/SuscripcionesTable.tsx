@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Modal } from "@/components/admin/ui/Modal";
-import { formatearDia, formatearFechaHora } from "@/lib/fechas";
+import { claveDia, formatearDia, formatearFechaHora } from "@/lib/fechas";
+import { crearXlsx, descargarArchivo } from "@/lib/xlsx";
 import type { EstadoPagoSuscripcion, EstadoSuscripcion, MetodoPago, PagoSuscripcion, Suscripcion } from "@/lib/types";
 import {
   diasHasta,
@@ -48,6 +49,47 @@ const BOTON =
   "whitespace-nowrap rounded-lg border border-muted/70 px-3 py-1.5 text-xs font-medium transition-colors hover:border-brand/40 disabled:pointer-events-none disabled:opacity-40";
 
 const MOTIVO_SUGERIDO = "Adeuda pagos";
+
+const ULTIMOS_PAGOS = 5;
+
+/** Los últimos pagos (vienen ordenados del más nuevo al más viejo); un comprobante por revisar se muestra siempre. */
+function ultimosPagos(pagos: PagoSuscripcion[]) {
+  const ultimos = pagos.slice(0, ULTIMOS_PAGOS);
+  const pendientesViejos = pagos.slice(ULTIMOS_PAGOS).filter((p) => p.estado === "pendiente");
+  return [...ultimos, ...pendientesViejos];
+}
+
+/** Descarga en Excel todos los pagos de las suscripciones indicadas. */
+function descargarPagos(suscripciones: SuscripcionAdminRow[], nombre: string) {
+  const filas = suscripciones
+    .flatMap((s) => s.pagos.map((p) => ({ s, p })))
+    .sort((a, b) => b.p.creadoEn.localeCompare(a.p.creadoEn))
+    .map(({ s, p }) => [
+      formatearFechaHora(p.creadoEn),
+      s.numeroCliente,
+      s.cliente,
+      s.cajaNombre,
+      `Cada ${s.frecuenciaDias} días`,
+      p.metodoPago === "efectivo" ? "Efectivo" : "Transferencia",
+      Math.round(p.monto),
+      ETIQUETA_ESTADO_PAGO[p.estado],
+      p.comprobanteUrl ? "Sí" : "No",
+    ]);
+
+  const archivo = crearXlsx(
+    "Pagos",
+    ["Fecha", "N° cliente", "Cliente", "Caja", "Frecuencia", "Método", "Monto ($)", "Estado", "Comprobante"],
+    filas
+  );
+  const limpio = nombre
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-zA-Z0-9-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .toLowerCase();
+  descargarArchivo(archivo, `${limpio || "pagos"}.xlsx`);
+}
 
 export function SuscripcionesTable({
   suscripcionesIniciales,
@@ -252,17 +294,26 @@ export function SuscripcionesTable({
           {suscripciones.filter((s) => s.estado === "activa").length} activas ·{" "}
           {suscripciones.filter((s) => estadoDeuda(s, hoy).adeuda).length} adeudan
         </p>
-        <label className="sr-only" htmlFor="buscar-suscripcion">
-          Buscar suscripción
-        </label>
-        <input
-          id="buscar-suscripcion"
-          type="search"
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-          placeholder="Cliente o N° de cliente"
-          className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand sm:w-64"
-        />
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          <button
+            type="button"
+            onClick={() => descargarPagos(suscripciones, `pagos-suscripciones-${claveDia(new Date())}`)}
+            className={BOTON}
+          >
+            📥 Todos los pagos (Excel)
+          </button>
+          <label className="sr-only" htmlFor="buscar-suscripcion">
+            Buscar suscripción
+          </label>
+          <input
+            id="buscar-suscripcion"
+            type="search"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            placeholder="Cliente o N° de cliente"
+            className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand sm:w-64"
+          />
+        </div>
       </div>
 
       {mensaje && (
@@ -461,6 +512,23 @@ export function SuscripcionesTable({
           onClose={() => setHistorialCliente(null)}
         >
           <div className="space-y-6 text-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-background/60 px-3 py-2">
+              <span className="text-xs text-muted">
+                {suscripcionesDelHistorial.reduce((total, s) => total + s.pagos.length, 0)} pagos en total
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  descargarPagos(
+                    suscripcionesDelHistorial,
+                    `pagos-${suscripcionesDelHistorial[0].numeroCliente ?? ""}-${suscripcionesDelHistorial[0].cliente}`
+                  )
+                }
+                className={BOTON}
+              >
+                📥 Descargar Excel
+              </button>
+            </div>
             {suscripcionesDelHistorial.map((s) => {
               const deuda = estadoDeuda(s, hoy);
               return (
@@ -480,7 +548,7 @@ export function SuscripcionesTable({
                     <p className="mt-2 text-xs text-muted">Sin pagos registrados.</p>
                   ) : (
                     <ul className="mt-2 divide-y divide-border rounded-xl border border-border">
-                      {s.pagos.map((p) => (
+                      {ultimosPagos(s.pagos).map((p) => (
                         <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
                           <span>
                             {formatearFechaHora(p.creadoEn)} · {formatoMoneda(p.monto)} ·{" "}
@@ -519,6 +587,11 @@ export function SuscripcionesTable({
                         </li>
                       ))}
                     </ul>
+                  )}
+                  {s.pagos.length > ultimosPagos(s.pagos).length && (
+                    <p className="mt-1 text-xs text-muted">
+                      Mostrando los últimos {ULTIMOS_PAGOS} de {s.pagos.length} pagos. Los ves todos en el Excel.
+                    </p>
                   )}
                   {s.estado !== "cancelada" && (
                     <div className="mt-2 flex flex-wrap gap-1.5">

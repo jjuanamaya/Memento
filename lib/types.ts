@@ -77,9 +77,30 @@ export interface FrecuenciaSuscripcion {
   id: string;
   dias: number;
   etiqueta: string;
-  precio: number;
+  /** % que se descuenta del precio de la caja por suscribirse con esta frecuencia. */
+  descuentoPorcentaje: number;
   activa: boolean;
   orden: number;
+}
+
+/**
+ * Precio por entrega de una suscripción: el promedio de lo que sale la caja con
+ * cada temática elegida (las que hoy se pueden armar), menos el descuento de la
+ * frecuencia. Es el mismo cálculo que hace la base en crear_suscripcion.
+ * Devuelve null si ninguna de las temáticas se puede armar en ese tamaño.
+ */
+export function precioSuscripcion(
+  cotizaciones: Cotizacion[],
+  cajaId: string,
+  tematicaIds: string[],
+  descuentoPorcentaje: number
+): number | null {
+  const precios = cotizaciones
+    .filter((c) => c.cajaId === cajaId && tematicaIds.includes(c.tematicaId) && c.estado === "disponible")
+    .map((c) => c.precio);
+  if (precios.length === 0) return null;
+  const precioCaja = Math.round(precios.reduce((suma, p) => suma + p, 0) / precios.length);
+  return Math.round(precioCaja * (1 - descuentoPorcentaje / 100));
 }
 
 export interface Producto {
@@ -174,10 +195,6 @@ export function diasHasta(fecha: string, hoy: string): number {
   );
 }
 
-export interface Repartidor {
-  id: string;
-  nombre: string;
-}
 
 export const ESTADOS_SUSCRIPCION: EstadoSuscripcion[] = ["activa", "pausada", "cancelada"];
 

@@ -300,7 +300,7 @@ export function SuscripcionesTable({
             onClick={() => descargarPagos(suscripciones, `pagos-suscripciones-${claveDia(new Date())}`)}
             className={BOTON}
           >
-            📥 Todos los pagos (Excel)
+            Todos los pagos (Excel)
           </button>
           <label className="sr-only" htmlFor="buscar-suscripcion">
             Buscar suscripción
@@ -364,7 +364,7 @@ export function SuscripcionesTable({
                           onClick={() => setHistorialCliente(s.clienteId)}
                           className={`${BOTON} mt-2`}
                         >
-                          💳 Historial de pagos
+                          Historial de pagos
                         </button>
                       </>
                     ) : (
@@ -405,7 +405,7 @@ export function SuscripcionesTable({
                         </span>
                         {s.ultimoEnvioAdeudando && (
                           <p className="mt-1 text-xs font-medium text-brand">
-                            📦 Caja enviada igual ({formatearDia(s.ultimoEnvioAdeudando)})
+                            Caja enviada igual ({formatearDia(s.ultimoEnvioAdeudando)})
                           </p>
                         )}
                       </>
@@ -414,7 +414,7 @@ export function SuscripcionesTable({
                         Al día{s.pagadoHasta && ` · vence ${formatearDia(s.pagadoHasta)}`}
                       </span>
                     )}
-                    {pendiente && <p className="mt-1 text-xs text-brand">⏳ Comprobante por revisar</p>}
+                    {pendiente && <p className="mt-1 text-xs text-brand">Comprobante por revisar</p>}
                     <p className="text-xs text-muted">{s.metodoPago === "efectivo" ? "Efectivo" : "Transferencia"}</p>
                   </td>
                   <td className="px-4 py-3">
@@ -526,7 +526,7 @@ export function SuscripcionesTable({
                 }
                 className={BOTON}
               >
-                📥 Descargar Excel
+                Descargar Excel
               </button>
             </div>
             {suscripcionesDelHistorial.map((s) => {

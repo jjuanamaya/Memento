@@ -2,11 +2,14 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { guardarTelefono, telefonoValido } from "@/components/cliente/telefono";
 import { ACCEPT_COMPROBANTE, borrarComprobante, errorComprobante, subirComprobante } from "@/components/cliente/comprobante";
 import { DatosTransferencia } from "@/components/cliente/DatosTransferencia";
 import { EntregaFields } from "@/components/cliente/EntregaFields";
+import { IconoRegalo } from "@/components/site/IconoRegalo";
+import { mapearCotizaciones } from "@/lib/mapeos";
 import {
   MOTIVO_COTIZACION,
   type Caja,
@@ -67,6 +70,52 @@ function formatoMoneda(valor: number) {
   return `$${Math.round(valor).toLocaleString("es-AR")}`;
 }
 
+/** Lo que eligió alguien sin sesión: viaja en el link de vuelta del login (/armar?caja=…). */
+export interface SeleccionInicial {
+  cajaId: string;
+  tematicaId: string;
+  cantidades: Record<string, number>;
+}
+
+/**
+ * Dónde arranca el armador. El link de vuelta del login puede traer cualquier
+ * cosa (o quedar viejo), así que solo se retoma lo que todavía se puede pedir:
+ * una temática disponible para ese tamaño, o productos con stock que entren.
+ */
+function estadoInicial(
+  seleccion: SeleccionInicial | null,
+  cajas: Caja[],
+  tematicas: Tematica[],
+  cotizaciones: Cotizacion[],
+  productos: Producto[]
+): { paso: Paso; caja: Caja | null; tematica: Tematica | null; cantidades: Record<string, number> } {
+  const caja = cajas.find((c) => c.id === seleccion?.cajaId) ?? null;
+  const tematica = tematicas.find((t) => t.id === seleccion?.tematicaId) ?? null;
+  if (!seleccion || !caja) return { paso: "caja", caja: null, tematica: null, cantidades: {} };
+  if (!tematica) return { paso: "tematica", caja, tematica: null, cantidades: {} };
+
+  if (!tematica.personalizada) {
+    const disponible = cotizaciones.some(
+      (c) => c.cajaId === caja.id && c.tematicaId === tematica.id && c.estado === "disponible"
+    );
+    return disponible
+      ? { paso: "resumen", caja, tematica, cantidades: {} }
+      : { paso: "tematica", caja, tematica: null, cantidades: {} };
+  }
+
+  const cantidades: Record<string, number> = {};
+  let lugar = caja.capacidad;
+  for (const producto of productos) {
+    const cantidad = Math.min(seleccion.cantidades[producto.id] ?? 0, producto.stockActual, lugar);
+    if (cantidad > 0) {
+      cantidades[producto.id] = cantidad;
+      lugar -= cantidad;
+    }
+  }
+  const hayProductos = Object.keys(cantidades).length > 0;
+  return { paso: hayProductos ? "resumen" : "productos", caja, tematica, cantidades };
+}
+
 interface BoxBuilderProps {
   cajas: Caja[];
   tematicas: Tematica[];
@@ -74,7 +123,9 @@ interface BoxBuilderProps {
   productos: Producto[];
   categorias: CategoriaProducto[];
   config: Configuracion;
+  logueado: boolean;
   telefonoInicial: string;
+  seleccionInicial: SeleccionInicial | null;
 }
 
 export function BoxBuilder({
@@ -84,12 +135,20 @@ export function BoxBuilder({
   productos,
   categorias,
   config,
+  logueado,
   telefonoInicial,
+  seleccionInicial,
 }: BoxBuilderProps) {
-  const [paso, setPaso] = useState<Paso>("caja");
-  const [caja, setCaja] = useState<Caja | null>(null);
-  const [tematica, setTematica] = useState<Tematica | null>(null);
-  const [cantidades, setCantidades] = useState<Record<string, number>>({});
+  const router = useRouter();
+  const [inicio] = useState(() => estadoInicial(seleccionInicial, cajas, tematicas, cotizaciones, productos));
+
+  const [paso, setPaso] = useState<Paso>(inicio.paso);
+  const [cajaElegida, setCaja] = useState<Caja | null>(inicio.caja);
+  const [tematicaElegida, setTematica] = useState<Tematica | null>(inicio.tematica);
+  // Siempre la versión más nueva que mandó el servidor (cambia si se refrescan los datos).
+  const caja = cajas.find((c) => c.id === cajaElegida?.id) ?? cajaElegida;
+  const tematica = tematicas.find((t) => t.id === tematicaElegida?.id) ?? tematicaElegida;
+  const [cantidades, setCantidades] = useState<Record<string, number>>(inicio.cantidades);
   const [tipoEntrega, setTipoEntrega] = useState<TipoEntrega | null>(null);
   const [direccion, setDireccion] = useState("");
   const [comentario, setComentario] = useState("");
@@ -100,6 +159,19 @@ export function BoxBuilder({
   const [enviando, setEnviando] = useState(false);
   const [acepta, setAcepta] = useState(false);
   const [error, setError] = useState("");
+
+  /** Manda a ingresar (o registrarse) y vuelve a este mismo resumen. */
+  function ingresarParaConfirmar(destino: "/login" | "/registro") {
+    const vuelta = new URLSearchParams();
+    if (caja) vuelta.set("caja", caja.id);
+    if (tematica) vuelta.set("tematica", tematica.id);
+    const items = Object.entries(cantidades)
+      .filter(([, cantidad]) => cantidad > 0)
+      .map(([id, cantidad]) => `${id}:${cantidad}`)
+      .join(",");
+    if (esPersonalizada && items) vuelta.set("items", items);
+    router.push(`${destino}?next=${encodeURIComponent(`/armar?${vuelta.toString()}`)}`);
+  }
 
   const esPersonalizada = !!tematica?.personalizada;
   const pasos = esPersonalizada ? PASOS_PERSONALIZADA : PASOS_TEMATICA;
@@ -122,10 +194,10 @@ export function BoxBuilder({
   const grupos = useMemo(() => {
     const conocidas = new Set(categorias.map((c) => c.id));
     const lista = categorias
-      .map((c) => ({ id: c.id, label: c.nombre, icono: c.icono, productos: productos.filter((p) => p.categoriaId === c.id) }))
+      .map((c) => ({ id: c.id, label: c.nombre, productos: productos.filter((p) => p.categoriaId === c.id) }))
       .filter((g) => g.productos.length > 0);
     const sinCategoria = productos.filter((p) => !p.categoriaId || !conocidas.has(p.categoriaId));
-    if (sinCategoria.length > 0) lista.push({ id: "otros", label: "Otros", icono: "🎁", productos: sinCategoria });
+    if (sinCategoria.length > 0) lista.push({ id: "otros", label: "Otros", productos: sinCategoria });
     return lista;
   }, [categorias, productos]);
 
@@ -197,6 +269,51 @@ export function BoxBuilder({
     setComprobante(archivo);
   }
 
+  /**
+   * El total lo calcula la base al confirmar, con el stock y los precios de ese
+   * momento. Si cambiaron desde que se cargó la página, lo que ve el cliente ya
+   * no es lo que se le cobraría: se frena y se le muestran los datos nuevos.
+   */
+  async function totalSigueVigente(supabase: ReturnType<typeof createClient>) {
+    if (!caja || !tematica) return false;
+
+    let subtotalActual: number | null = null;
+    if (esPersonalizada) {
+      const [cajaActual, productosActuales] = await Promise.all([
+        supabase.from("cajas").select("precio").eq("id", caja.id).maybeSingle(),
+        supabase
+          .from("productos")
+          .select("id, precio")
+          .in(
+            "id",
+            items.map((item) => item.producto.id)
+          ),
+      ]);
+      const precios = new Map((productosActuales.data ?? []).map((p) => [p.id as string, Number(p.precio)]));
+      if (cajaActual.data && items.every((item) => precios.has(item.producto.id))) {
+        subtotalActual =
+          Number(cajaActual.data.precio) +
+          items.reduce((suma, item) => suma + (precios.get(item.producto.id) ?? 0) * item.cantidad, 0);
+      }
+    } else {
+      const { data } = await supabase.rpc("cotizar_cajas");
+      const actual = mapearCotizaciones(data).find((c) => c.cajaId === caja.id && c.tematicaId === tematica.id);
+      const contenido = (c: Cotizacion | null | undefined) =>
+        (c?.items ?? [])
+          .map((it) => `${it.productoId}:${it.cantidad}`)
+          .sort()
+          .join(",");
+      if (actual?.estado === "disponible" && contenido(actual) === contenido(cotizacion)) {
+        subtotalActual = actual.precio;
+      }
+    }
+
+    const envio = await supabase.from("configuracion").select("costo_envio").eq("id", 1).maybeSingle();
+    const envioActual = tipoEntrega === "envio" ? Number(envio.data?.costo_envio ?? 0) : 0;
+
+    return subtotalActual !== null && Math.round(subtotalActual + envioActual) === Math.round(total);
+  }
+
   async function confirmarPedido() {
     if (!caja || !tematica || !metodoPago || !tipoEntrega) return;
     if (metodoPago === "transferencia" && !comprobante) {
@@ -208,6 +325,13 @@ export function BoxBuilder({
     setError("");
 
     const supabase = createClient();
+
+    if (!(await totalSigueVigente(supabase))) {
+      setEnviando(false);
+      setError("El contenido o el precio cambió recién. Actualizamos los datos: revisalos y confirmá de nuevo.");
+      router.refresh();
+      return;
+    }
 
     if (telefono.trim() !== telefonoInicial.trim()) {
       await guardarTelefono(supabase, telefono);
@@ -265,8 +389,8 @@ export function BoxBuilder({
     const recibe = tipoEntrega === "retiro" ? "retirar" : "recibir";
     return (
       <div role="status" className="mx-auto max-w-md px-6 py-24 text-center">
-        <span aria-hidden="true" className="animate-fade-in-up inline-block text-5xl">
-          🎉
+        <span className="animate-fade-in-up inline-flex text-brand">
+          <IconoRegalo className="h-14 w-14" />
         </span>
         <p className="animate-fade-in-up mt-4 text-sm text-muted [animation-delay:80ms]">
           Pedido #{pedidoId?.slice(0, 8)}
@@ -299,7 +423,9 @@ export function BoxBuilder({
         ? !!tematica && (esPersonalizada || cotizacion?.estado === "disponible")
         : paso === "productos"
           ? cantidadTotalItems > 0
-          : !!metodoPago &&
+          : // Lo que se va a pedir tiene que seguir siendo válido al llegar al final.
+            (esPersonalizada ? cantidadTotalItems > 0 : cotizacion?.estado === "disponible") &&
+            !!metodoPago &&
             !!tipoEntrega &&
             (tipoEntrega === "retiro" || !!direccion.trim()) &&
             telefonoValido(telefono) &&
@@ -419,10 +545,10 @@ export function BoxBuilder({
                       ) : (
                         <div
                           aria-hidden="true"
-                          className="flex h-full w-full items-center justify-center bg-linear-to-br from-brand/30 via-brand/10 to-transparent"
+                          className="flex h-full w-full items-center justify-center bg-linear-to-br from-brand/30 via-brand/10 to-transparent text-brand"
                         >
-                          <span className="text-6xl transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-110">
-                            🎁
+                          <span className="transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-110">
+                            <IconoRegalo className="h-14 w-14" />
                           </span>
                         </div>
                       )}
@@ -483,10 +609,10 @@ export function BoxBuilder({
                   ) : (
                     <div
                       aria-hidden="true"
-                      className="flex h-full w-full items-center justify-center bg-linear-to-br from-brand/25 via-brand/5 to-transparent"
+                      className="flex h-full w-full items-center justify-center bg-linear-to-br from-brand/25 via-brand/5 to-transparent text-brand"
                     >
-                      <span className="text-5xl transition-transform duration-500 group-hover:scale-110">
-                        {t.personalizada ? "✍️" : "✨"}
+                      <span className="transition-transform duration-500 group-hover:scale-110">
+                        <IconoRegalo className="h-11 w-11" />
                       </span>
                     </div>
                   )}
@@ -551,19 +677,14 @@ export function BoxBuilder({
             </div>
             <p className={`mt-2 text-center text-xs ${capacidadRestante === 0 ? "font-medium text-brand" : "text-muted"}`}>
               {capacidadRestante === 0
-                ? "¡Caja completa! 🎉"
+                ? "¡Caja completa!"
                 : `Te quedan ${capacidadRestante} lugar${capacidadRestante === 1 ? "" : "es"} libre${capacidadRestante === 1 ? "" : "s"}`}
             </p>
           </div>
 
           {grupos.map((grupo) => (
             <div key={grupo.id} className="mt-10">
-              <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted">
-                {grupo.icono && (
-                  <span aria-hidden="true" className="text-lg">
-                    {grupo.icono}
-                  </span>
-                )}
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
                 {grupo.label}
               </h3>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -627,7 +748,11 @@ export function BoxBuilder({
                 aria-hidden="true"
                 className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-brand/30 to-transparent text-2xl"
               >
-                {caja.imagen ? <img src={caja.imagen} alt="" className="h-full w-full object-cover" /> : "🎁"}
+                {caja.imagen ? (
+                  <img src={caja.imagen} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <IconoRegalo className="h-7 w-7 text-brand" />
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-semibold">{caja.nombre}</p>
@@ -646,17 +771,21 @@ export function BoxBuilder({
                     <span>{formatoMoneda(item.producto.precio * item.cantidad)}</span>
                   </div>
                 ))
-              ) : (
+              ) : cotizacion?.estado === "disponible" ? (
                 <>
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted">Tu caja lleva</p>
                   <ul className="space-y-1 text-muted">
-                    {cotizacion?.items.map((it) => (
+                    {cotizacion.items.map((it) => (
                       <li key={it.productoId}>
                         {it.cantidad}× {it.nombre}
                       </li>
                     ))}
                   </ul>
                 </>
+              ) : (
+                <p role="alert" className="text-red-400">
+                  Esta temática ya no está disponible para este tamaño. Volvé y elegí otra temática u otra caja.
+                </p>
               )}
             </div>
 
@@ -678,6 +807,27 @@ export function BoxBuilder({
             </div>
           </div>
 
+          {!logueado ? (
+            <div className="mt-8 rounded-3xl border border-brand/30 bg-brand/5 p-6 text-center">
+              <p className="text-lg font-semibold">¡Tu caja está lista!</p>
+              <p className="mt-2 text-sm text-muted">
+                Para confirmar el pedido ingresá o creá tu cuenta. Tu caja queda guardada y seguís desde acá.
+              </p>
+              <div className="mt-5 flex flex-wrap justify-center gap-3">
+                <button type="button" onClick={() => ingresarParaConfirmar("/login")} className={BOTON_PRIMARIO}>
+                  Ingresar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => ingresarParaConfirmar("/registro")}
+                  className="rounded-full border border-border px-6 py-3 font-medium transition-colors hover:border-brand/40"
+                >
+                  Crear cuenta
+                </button>
+              </div>
+            </div>
+          ) : (
+          <>
           <div className="mt-8">
             <EntregaFields
               idPrefix="pedido"
@@ -693,7 +843,7 @@ export function BoxBuilder({
 
           <div className="mt-6">
             <label htmlFor="pedido-telefono" className="text-sm font-medium">
-              <span aria-hidden="true">📞 </span>Teléfono para coordinar
+              Teléfono para coordinar
             </label>
             <input
               id="pedido-telefono"
@@ -722,10 +872,9 @@ export function BoxBuilder({
             <div role="group" aria-labelledby="pedido-metodo" className="mt-2 grid grid-cols-2 gap-3">
               {(
                 [
-                  { id: "transferencia", icono: "🏦", label: "Transferencia" },
+                  { id: "transferencia", label: "Transferencia" },
                   {
                     id: "efectivo",
-                    icono: "💵",
                     label: tipoEntrega === "retiro" ? "Efectivo al retirar" : "Efectivo al recibir",
                   },
                 ] as const
@@ -739,9 +888,6 @@ export function BoxBuilder({
                     metodoPago === m.id ? "border-brand bg-surface ring-1 ring-brand" : "border-border hover:border-brand/40"
                   }`}
                 >
-                  <span aria-hidden="true" className="text-2xl">
-                    {m.icono}
-                  </span>
                   <span className="text-sm font-medium">{m.label}</span>
                 </button>
               ))}
@@ -796,6 +942,8 @@ export function BoxBuilder({
               .
             </label>
           </div>
+          </>
+          )}
         </div>
       )}
 
@@ -824,6 +972,11 @@ export function BoxBuilder({
                 Volver
               </button>
             )}
+            {paso === "resumen" && !logueado ? (
+              <button type="button" onClick={() => ingresarParaConfirmar("/login")} className={BOTON_PRIMARIO}>
+                Ingresar para confirmar
+              </button>
+            ) : (
             <button type="button" disabled={!puedeContinuar} onClick={continuar} className={BOTON_PRIMARIO}>
               {paso === "resumen" ? (
                 enviando ? (
@@ -832,11 +985,10 @@ export function BoxBuilder({
                   "Confirmar pedido"
                 )
               ) : (
-                <>
-                  Continuar <span aria-hidden="true">→</span>
-                </>
+                "Continuar"
               )}
             </button>
+            )}
           </div>
         </div>
       </div>

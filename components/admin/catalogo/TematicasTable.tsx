@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { IconoRegalo } from "@/components/site/IconoRegalo";
 import { createClient } from "@/lib/supabase/client";
 import { TematicaForm } from "@/components/admin/catalogo/TematicaForm";
 import { borrarImagenCatalogo } from "@/components/admin/catalogo/imagenCatalogo";
@@ -107,8 +108,8 @@ export function TematicasTable({
               {t.imagen ? (
                 <img src={t.imagen} alt="" className="mb-3 h-32 w-full rounded-lg object-cover" />
               ) : (
-                <div className="mb-3 flex h-32 w-full items-center justify-center rounded-lg bg-background text-2xl">
-                  ✨
+                <div className="mb-3 flex h-32 w-full items-center justify-center rounded-lg bg-background text-muted">
+                  <IconoRegalo className="h-10 w-10" />
                 </div>
               )}
               <div className="flex items-start justify-between gap-2">
@@ -127,7 +128,7 @@ export function TematicasTable({
               {t.personalizada ? (
                 <p className="mt-2 text-xs text-brand">El cliente elige cada producto.</p>
               ) : t.productoIds.length === 0 ? (
-                <p className="mt-2 text-xs text-yellow-400">⚠️ Sin productos: los clientes no pueden pedirla.</p>
+                <p className="mt-2 text-xs text-yellow-400">Sin productos: los clientes no pueden pedirla.</p>
               ) : (
                 <p className="mt-2 text-xs text-muted">
                   Se llena con:{" "}

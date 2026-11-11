@@ -34,11 +34,10 @@ export function EntregaFields({
   const opciones = [
     {
       id: "envio" as const,
-      icono: "🚚",
       label: "Envío a domicilio",
       detalle: config.costoEnvio === 0 ? "Sin cargo" : formatoMoneda(config.costoEnvio),
     },
-    { id: "retiro" as const, icono: "🏪", label: "Retiro en el local", detalle: "Sin cargo" },
+    { id: "retiro" as const, label: "Retiro en el local", detalle: "Sin cargo" },
   ];
 
   return (
@@ -57,9 +56,6 @@ export function EntregaFields({
               tipo === o.id ? "border-brand bg-surface ring-1 ring-brand" : "border-border hover:border-brand/40"
             }`}
           >
-            <span aria-hidden="true" className="text-2xl">
-              {o.icono}
-            </span>
             <span>
               <span className="block text-sm font-medium">{o.label}</span>
               <span className="block text-xs text-muted">{o.detalle}</span>
@@ -72,7 +68,7 @@ export function EntregaFields({
         <div className="mt-5 space-y-5">
           <div>
             <label htmlFor={`${idPrefix}-direccion`} className="text-sm font-medium">
-              <span aria-hidden="true">📍 </span>Dirección de entrega en Cañada de Gómez
+              Dirección de entrega en Cañada de Gómez
             </label>
             <input
               id={`${idPrefix}-direccion`}

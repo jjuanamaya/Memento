@@ -37,21 +37,29 @@ export function Nav({
           </Link>
         )}
         {logueado ? (
-          <div className="flex items-center gap-4">
-            <span>Hola, {nombre || "vos"}</span>
+          <div className="flex items-center gap-4 border-l border-border pl-6">
+            {/* Texto, no link: un saludo con otro color para que no parezca un botón más. */}
+            <span className="text-xs text-muted/80">
+              Hola, <span className="font-medium text-brand">{nombre || "vos"}</span>
+            </span>
             <form action={signOut}>
-              <button type="submit" className="transition-colors hover:text-foreground">
+              <button
+                type="submit"
+                className="rounded-full border border-brand px-4 py-2 font-medium text-brand transition-colors hover:bg-brand hover:text-brand-foreground"
+              >
                 Cerrar sesión
               </button>
             </form>
           </div>
         ) : (
-          <Link
+          // Carga completa a propósito: así el encabezado se vuelve a armar con
+          // la sesión real (si ya había sesión, /login redirige y se ve "Hola").
+          <a
             href="/login"
             className="rounded-full bg-brand px-4 py-2 font-medium text-brand-foreground transition-opacity hover:opacity-90"
           >
             Ingresar
-          </Link>
+          </a>
         )}
       </nav>
 
@@ -101,24 +109,26 @@ export function Nav({
             )}
             {logueado ? (
               <>
-                <span className="px-2 py-2">Hola, {nombre || "vos"}</span>
-                <form action={signOut}>
+                <span className="mt-2 border-t border-border px-2 pt-4 text-xs text-muted/80">
+                  Hola, <span className="font-medium text-brand">{nombre || "vos"}</span>
+                </span>
+                <form action={signOut} className="mt-2">
                   <button
                     type="submit"
-                    className="w-full rounded-lg px-2 py-3 text-left transition-colors hover:bg-surface hover:text-foreground"
+                    className="w-full rounded-full border border-brand px-4 py-2 text-center font-medium text-brand transition-colors hover:bg-brand hover:text-brand-foreground"
                   >
                     Cerrar sesión
                   </button>
                 </form>
               </>
             ) : (
-              <Link
+              <a
                 href="/login"
                 onClick={() => setAbierto(false)}
                 className="mt-2 rounded-full bg-brand px-4 py-2 text-center font-medium text-brand-foreground"
               >
                 Ingresar
-              </Link>
+              </a>
             )}
           </nav>
           </div>

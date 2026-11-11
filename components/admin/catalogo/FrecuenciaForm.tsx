@@ -16,7 +16,7 @@ export function FrecuenciaForm({ frecuencia, onClose, onSaved }: FrecuenciaFormP
 
   const [etiqueta, setEtiqueta] = useState(frecuencia?.etiqueta ?? "");
   const [dias, setDias] = useState(String(frecuencia?.dias ?? ""));
-  const [precio, setPrecio] = useState(String(frecuencia?.precio ?? ""));
+  const [descuento, setDescuento] = useState(String(frecuencia?.descuentoPorcentaje ?? "0"));
   const [activa, setActiva] = useState(frecuencia?.activa ?? true);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
@@ -26,7 +26,7 @@ export function FrecuenciaForm({ frecuencia, onClose, onSaved }: FrecuenciaFormP
     setError("");
 
     const diasNum = Number(dias);
-    const precioNum = Number(precio);
+    const descuentoNum = Number(descuento || 0);
 
     if (!etiqueta.trim()) {
       setError("Ponele un nombre a la frecuencia, por ejemplo \"Cada semana\".");
@@ -36,8 +36,8 @@ export function FrecuenciaForm({ frecuencia, onClose, onSaved }: FrecuenciaFormP
       setError("Los días tienen que ser un número entero mayor a 0.");
       return;
     }
-    if (!Number.isFinite(precioNum) || precioNum < 0) {
-      setError("El precio tiene que ser un número válido.");
+    if (!Number.isFinite(descuentoNum) || descuentoNum < 0 || descuentoNum > 90) {
+      setError("El descuento tiene que ser un porcentaje entre 0 y 90.");
       return;
     }
 
@@ -47,7 +47,7 @@ export function FrecuenciaForm({ frecuencia, onClose, onSaved }: FrecuenciaFormP
     const payload = {
       etiqueta: etiqueta.trim(),
       dias: diasNum,
-      precio: precioNum,
+      descuento_porcentaje: descuentoNum,
       activa,
     };
 
@@ -78,7 +78,7 @@ export function FrecuenciaForm({ frecuencia, onClose, onSaved }: FrecuenciaFormP
       id: f.id,
       etiqueta: f.etiqueta,
       dias: f.dias,
-      precio: Number(f.precio),
+      descuentoPorcentaje: Number(f.descuento_porcentaje ?? 0),
       activa: f.activa,
       orden: f.orden,
     });
@@ -108,15 +108,20 @@ export function FrecuenciaForm({ frecuencia, onClose, onSaved }: FrecuenciaFormP
             />
           </div>
           <div>
-            <label htmlFor="frecuencia-campo-3" className="mb-1 block text-xs font-medium text-muted">Precio por entrega</label>
+            <label htmlFor="frecuencia-campo-3" className="mb-1 block text-xs font-medium text-muted">Descuento por suscribirse (%)</label>
             <input id="frecuencia-campo-3"
               inputMode="decimal"
-              value={precio}
-              onChange={(e) => setPrecio(e.target.value)}
+              value={descuento}
+              onChange={(e) => setDescuento(e.target.value)}
               className="w-full rounded-lg border border-muted/70 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand"
             />
           </div>
         </div>
+
+        <p className="-mt-2 text-[11px] text-muted">
+          El precio por entrega es el de la caja que elija el cliente (promedio de sus temáticas) menos este
+          descuento. Con 0, la suscripción sale lo mismo que la caja suelta.
+        </p>
 
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={activa} onChange={(e) => setActiva(e.target.checked)} className="h-4 w-4" />

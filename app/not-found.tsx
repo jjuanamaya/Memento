@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { IconoRegalo } from "@/components/site/IconoRegalo";
 
 export default function NoEncontrada() {
   return (
     <main id="contenido" className="mx-auto flex max-w-md flex-1 flex-col items-center justify-center px-6 py-24 text-center">
-      <span aria-hidden="true" className="text-5xl">
-        🎁
+      <span className="inline-flex text-brand">
+        <IconoRegalo className="h-14 w-14" />
       </span>
       <p className="mt-4 text-sm font-semibold uppercase tracking-[0.2em] text-brand">Error 404</p>
       <h1 className="mt-2 text-3xl font-semibold">Esta página no existe</h1>

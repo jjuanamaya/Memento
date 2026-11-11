@@ -2,19 +2,23 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { guardarTelefono, telefonoValido } from "@/components/cliente/telefono";
 import { ACCEPT_COMPROBANTE, borrarComprobante, errorComprobante, subirComprobante } from "@/components/cliente/comprobante";
 import { DatosTransferencia } from "@/components/cliente/DatosTransferencia";
 import { EntregaFields } from "@/components/cliente/EntregaFields";
-import type {
-  Caja,
-  Configuracion,
-  FrecuenciaSuscripcion,
-  MetodoPago,
-  Producto,
-  Tematica,
-  TipoEntrega,
+import { IconoRegalo } from "@/components/site/IconoRegalo";
+import {
+  precioSuscripcion,
+  type Caja,
+  type Configuracion,
+  type Cotizacion,
+  type FrecuenciaSuscripcion,
+  type MetodoPago,
+  type Producto,
+  type Tematica,
+  type TipoEntrega,
 } from "@/lib/types";
 
 const MIN_TEMATICAS = 2;
@@ -22,7 +26,7 @@ const INPUT =
   "mt-2 w-full rounded-xl border border-muted/70 bg-transparent p-3 outline-none transition-shadow focus:border-brand focus:shadow-[0_0_0_3px_rgba(232,121,79,0.18)]";
 
 // Errores de la base que se le pueden mostrar tal cual al cliente.
-const ERRORES_CONOCIDOS = ["sesión", "temática", "frecuencia", "caja", "dirección", "comprobante", "envío", "comentario"];
+const ERRORES_CONOCIDOS = ["sesión", "temática", "frecuencia", "caja", "dirección", "comprobante", "envío", "comentario", "precio", "stock"];
 
 function formatoMoneda(valor: number) {
   return `$${Math.round(valor).toLocaleString("es-AR")}`;
@@ -31,6 +35,7 @@ function formatoMoneda(valor: number) {
 interface SuscripcionFormProps {
   cajas: Caja[];
   tematicas: Tematica[];
+  cotizaciones: Cotizacion[];
   productos: Producto[];
   frecuencias: FrecuenciaSuscripcion[];
   config: Configuracion;
@@ -40,11 +45,13 @@ interface SuscripcionFormProps {
 export function SuscripcionForm({
   cajas,
   tematicas,
+  cotizaciones,
   productos,
   frecuencias,
   config,
   telefonoInicial,
 }: SuscripcionFormProps) {
+  const router = useRouter();
   const [caja, setCaja] = useState<Caja | null>(null);
   const [tematicasElegidas, setTematicasElegidas] = useState<Tematica[]>([]);
   const [frecuenciaDias, setFrecuenciaDias] = useState(frecuencias[0]?.dias ?? 30);
@@ -66,7 +73,19 @@ export function SuscripcionForm({
 
   const frecuenciaElegida = frecuencias.find((f) => f.dias === frecuenciaDias) ?? null;
   const costoEnvio = tipoEntrega === "envio" ? config.costoEnvio : 0;
-  const totalPorEntrega = (frecuenciaElegida?.precio ?? 0) + costoEnvio;
+
+  // El precio depende de la caja y de las temáticas: recién se puede calcular
+  // cuando están elegidas. null = todavía no se sabe, o no hay stock para armarla.
+  const idsElegidos = tematicasElegidas.map((t) => t.id);
+  const seleccionCompleta = !!caja && tematicasElegidas.length >= MIN_TEMATICAS;
+  const precioCon = (descuento: number) =>
+    caja && seleccionCompleta ? precioSuscripcion(cotizaciones, caja.id, idsElegidos, descuento) : null;
+  const precio = precioCon(frecuenciaElegida?.descuentoPorcentaje ?? 0);
+  const totalPorEntrega = (precio ?? 0) + costoEnvio;
+
+  function disponibleEnCaja(tematicaId: string) {
+    return cotizaciones.some((c) => c.cajaId === caja?.id && c.tematicaId === tematicaId && c.estado === "disponible");
+  }
 
   function alternarTematica(tematica: Tematica) {
     setTematicasElegidas((prev) =>
@@ -92,6 +111,7 @@ export function SuscripcionForm({
 
   async function suscribirse() {
     if (!caja || !metodoPago || !tipoEntrega || !acepta || tematicasElegidas.length < MIN_TEMATICAS) return;
+    if (precio === null) return;
     if (metodoPago === "transferencia" && !comprobante) {
       setError("Subí el comprobante de la transferencia para confirmar la suscripción.");
       return;
@@ -127,6 +147,8 @@ export function SuscripcionForm({
       p_comentario: comentario,
       p_tematica_ids: tematicasElegidas.map((t) => t.id),
       p_comprobante_url: rutaComprobante,
+      // La base lo recalcula: si no coincide (cambió el stock o un precio), no la crea.
+      p_precio_esperado: precio,
     });
 
     setEnviando(false);
@@ -135,6 +157,8 @@ export function SuscripcionForm({
       console.error("Error al crear suscripción:", errorSuscripcion);
       if (rutaComprobante) await borrarComprobante(supabase, rutaComprobante);
       const mensaje = errorSuscripcion.message ?? "";
+      // Trae precios y stock nuevos para que vea el monto actualizado.
+      if (mensaje.includes("precio") || mensaje.includes("stock")) router.refresh();
       setError(
         ERRORES_CONOCIDOS.some((clave) => mensaje.includes(clave))
           ? mensaje
@@ -150,8 +174,8 @@ export function SuscripcionForm({
   if (creada) {
     return (
       <div role="status" className="mx-auto max-w-md px-6 py-24 text-center">
-        <span aria-hidden="true" className="animate-fade-in-up inline-block text-5xl">
-          🎁
+        <span className="animate-fade-in-up inline-flex text-brand">
+          <IconoRegalo className="h-14 w-14" />
         </span>
         <h1 className="animate-fade-in-up mt-4 text-3xl font-semibold [animation-delay:80ms]">
           ¡Ya estás suscripto!
@@ -183,6 +207,7 @@ export function SuscripcionForm({
     (metodoPago !== "transferencia" || !!comprobante) &&
     acepta &&
     tematicasElegidas.length >= MIN_TEMATICAS &&
+    precio !== null &&
     !enviando;
 
   return (
@@ -247,6 +272,9 @@ export function SuscripcionForm({
                   <p className="font-medium">{t.nombre}</p>
                   {t.descripcion && <p className="mt-1 text-sm text-muted">{t.descripcion}</p>}
                   {trae && <p className="mt-1 text-xs text-muted">Trae: {trae}</p>}
+                  {caja && !disponibleEnCaja(t.id) && (
+                    <p className="mt-1 text-xs text-yellow-400">Hoy sin stock para la {caja.nombre}.</p>
+                  )}
                 </div>
                 <span
                   aria-hidden="true"
@@ -278,8 +306,17 @@ export function SuscripcionForm({
               }`}
             >
               <p className="text-sm font-medium">{f.etiqueta}</p>
-              <p className="mt-1 text-sm font-semibold text-brand">{formatoMoneda(f.precio)}</p>
-              <p className="text-xs text-muted">por entrega</p>
+              {f.descuentoPorcentaje > 0 && (
+                <p className="mt-1 text-xs font-semibold text-brand">{f.descuentoPorcentaje}% de descuento</p>
+              )}
+              {precioCon(f.descuentoPorcentaje) !== null && (
+                <>
+                  <p className="mt-1 text-sm font-semibold text-brand">
+                    {formatoMoneda(precioCon(f.descuentoPorcentaje) ?? 0)}
+                  </p>
+                  <p className="text-xs text-muted">por entrega</p>
+                </>
+              )}
             </button>
           ))}
         </div>
@@ -329,10 +366,9 @@ export function SuscripcionForm({
         <div role="group" aria-labelledby="sus-metodo" className="mt-2 grid grid-cols-2 gap-3">
           {(
             [
-              { id: "transferencia", icono: "🏦", label: "Transferencia" },
+              { id: "transferencia", label: "Transferencia" },
               {
                 id: "efectivo",
-                icono: "💵",
                 label: tipoEntrega === "retiro" ? "Efectivo al retirar" : "Efectivo al recibir",
               },
             ] as const
@@ -346,21 +382,36 @@ export function SuscripcionForm({
                 metodoPago === m.id ? "border-brand bg-surface" : "border-muted/70 hover:border-brand/40"
               }`}
             >
-              <span aria-hidden="true" className="text-2xl">
-                {m.icono}
-              </span>
               <span className="text-sm font-medium">{m.label}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {frecuenciaElegida && (
+      {!seleccionCompleta && (
+        <p className="mt-6 rounded-xl border border-border bg-surface px-5 py-4 text-sm text-muted">
+          Elegí la caja y al menos {MIN_TEMATICAS} temáticas para ver el precio por entrega.
+        </p>
+      )}
+
+      {seleccionCompleta && precio === null && (
+        <p role="alert" className="mt-6 rounded-xl border border-red-400/40 px-5 py-4 text-sm text-red-400">
+          Hoy no hay stock para armar la {caja?.nombre} con esas temáticas. Probá con otra caja u otras temáticas.
+        </p>
+      )}
+
+      {frecuenciaElegida && precio !== null && (
         <div className="mt-6 space-y-1 rounded-xl border border-border bg-surface px-5 py-4 text-sm">
           <div className="flex justify-between text-muted">
-            <span>Subtotal ({frecuenciaElegida.etiqueta.toLowerCase()})</span>
-            <span>{formatoMoneda(frecuenciaElegida.precio)}</span>
+            <span>
+              {caja?.nombre} ({frecuenciaElegida.etiqueta.toLowerCase()}
+              {frecuenciaElegida.descuentoPorcentaje > 0 && `, ${frecuenciaElegida.descuentoPorcentaje}% off`})
+            </span>
+            <span>{formatoMoneda(precio)}</span>
           </div>
+          <p className="text-xs text-muted">
+            Precio fijo por entrega: el promedio de lo que sale la caja con cada temática que elegiste.
+          </p>
           {tipoEntrega && (
             <div className="flex justify-between text-muted">
               <span>{tipoEntrega === "envio" ? "Envío" : "Retiro en el local"}</span>

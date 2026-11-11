@@ -4,6 +4,7 @@ import { SuscripcionForm } from "@/components/cliente/SuscripcionForm";
 import {
   fetchCajas,
   fetchConfiguracion,
+  fetchCotizaciones,
   fetchFrecuenciasSuscripcion,
   fetchProductos,
   fetchTematicas,
@@ -20,9 +21,10 @@ export default async function SuscribirsePage() {
 
   if (!user) redirect("/login?next=/suscribirse");
 
-  const [cajas, tematicas, productos, frecuencias, config, perfil] = await Promise.all([
+  const [cajas, tematicas, cotizaciones, productos, frecuencias, config, perfil] = await Promise.all([
     fetchCajas(),
     fetchTematicas(),
+    fetchCotizaciones(),
     fetchProductos(),
     fetchFrecuenciasSuscripcion(),
     fetchConfiguracion(),
@@ -33,6 +35,7 @@ export default async function SuscribirsePage() {
     <SuscripcionForm
       cajas={cajas}
       tematicas={tematicas}
+      cotizaciones={cotizaciones}
       productos={productos}
       frecuencias={frecuencias}
       config={config}

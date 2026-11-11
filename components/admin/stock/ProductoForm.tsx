@@ -142,7 +142,6 @@ export function ProductoForm({ producto, categorias, proveedores, onClose, onSav
               )}
               {categorias.map((c) => (
                 <option key={c.id} value={c.id} className="bg-background">
-                  {c.icono ? `${c.icono} ` : ""}
                   {c.nombre}
                   {!c.activa ? " (inactiva)" : ""}
                 </option>

@@ -10,10 +10,7 @@ export default function ErrorCliente({ error, retry }: { error: Error & { digest
 
   return (
     <div className="mx-auto max-w-md px-6 py-24 text-center">
-      <span aria-hidden="true" className="text-5xl">
-        😕
-      </span>
-      <h1 className="mt-4 text-2xl font-semibold">Algo salió mal</h1>
+      <h1 className="text-2xl font-semibold">Algo salió mal</h1>
       <p className="mt-3 text-muted">
         No pudimos cargar esta página. Puede ser un problema momentáneo de conexión.
       </p>

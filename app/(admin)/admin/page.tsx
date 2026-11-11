@@ -10,10 +10,10 @@ function formatoMoneda(valor: number) {
 }
 
 const ACCESOS_RAPIDOS = [
-  { href: "/admin/pedidos", icono: "📦", label: "Pedidos" },
-  { href: "/admin/suscripciones", icono: "🔁", label: "Suscripciones" },
-  { href: "/admin/stock", icono: "🧺", label: "Stock" },
-  { href: "/admin/catalogo", icono: "🎁", label: "Catálogo" },
+  { href: "/admin/pedidos", label: "Pedidos" },
+  { href: "/admin/suscripciones", label: "Suscripciones" },
+  { href: "/admin/stock", label: "Stock" },
+  { href: "/admin/catalogo", label: "Catálogo" },
 ];
 
 export default async function AdminDashboardPage() {
@@ -61,7 +61,6 @@ export default async function AdminDashboardPage() {
             href={a.href}
             className="flex flex-col items-center gap-2 rounded-xl border border-border bg-surface px-4 py-4 text-center transition-colors hover:border-brand/40"
           >
-            <span className="text-2xl">{a.icono}</span>
             <span className="text-sm font-medium">{a.label}</span>
           </Link>
         ))}
@@ -69,7 +68,7 @@ export default async function AdminDashboardPage() {
 
       {/* Lo que necesita atención hoy */}
       <div className="mt-8">
-        <p className="text-sm font-semibold">📋 Para hacer hoy</p>
+        <p className="text-sm font-semibold">Para hacer hoy</p>
       </div>
 
       <div className="mt-4 rounded-xl border border-border bg-surface p-6">
@@ -77,7 +76,7 @@ export default async function AdminDashboardPage() {
         <p className="mt-1 text-xs text-muted">Confirmados o en camino — los que necesitan atención ahora.</p>
 
         {data.pedidosEnCurso.length === 0 ? (
-          <p className="mt-6 text-sm text-muted">No hay ningún pedido en curso en este momento. 🎉</p>
+          <p className="mt-6 text-sm text-muted">No hay ningún pedido en curso en este momento.</p>
         ) : (
           <div className="mt-4 flex flex-col divide-y divide-border">
             {data.pedidosEnCurso.map((p) => (
@@ -99,24 +98,24 @@ export default async function AdminDashboardPage() {
 
       <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="rounded-xl border border-border bg-surface p-5">
-          <p className="text-sm text-muted">📦 Pedidos nuevos hoy</p>
+          <p className="text-sm text-muted">Pedidos nuevos hoy</p>
           <p className="mt-2 text-2xl font-semibold">{data.pedidosHoy}</p>
           <p className="mt-1 text-xs text-muted">{data.pedidosPorDespachar} confirmados sin despachar (30 días)</p>
         </div>
         <div className="rounded-xl border border-border bg-surface p-5">
-          <p className="text-sm text-muted">💰 Ingresos de hoy</p>
+          <p className="text-sm text-muted">Ingresos de hoy</p>
           <p className="mt-2 text-2xl font-semibold">{formatoMoneda(data.ingresosHoy)}</p>
           <p className="mt-1 text-xs text-muted">Esta semana: {formatoMoneda(data.ingresosSemana)}</p>
         </div>
         <div className="rounded-xl border border-border bg-surface p-5">
-          <p className="text-sm text-muted">⚠️ Alertas de stock</p>
+          <p className="text-sm text-muted">Alertas de stock</p>
           <p className={`mt-2 text-2xl font-semibold ${alertasStock > 0 ? "text-brand" : ""}`}>{alertasStock}</p>
           <p className="mt-1 text-xs text-muted">
             {data.stockAgotado} agotados · {data.stockBajo} por agotarse
           </p>
         </div>
         <div className="rounded-xl border border-border bg-surface p-5">
-          <p className="text-sm text-muted">🔥 Más pedida (30 días)</p>
+          <p className="text-sm text-muted">Más pedida (30 días)</p>
           <p className="mt-2 truncate text-2xl font-semibold">{data.tematicaTop?.nombre ?? "—"}</p>
           <p className="mt-1 text-xs text-muted">
             {data.tematicaTop ? `${data.tematicaTop.cantidad} pedidos` : "Todavía no hay datos"}
@@ -126,7 +125,7 @@ export default async function AdminDashboardPage() {
 
       {/* Tendencias */}
       <div className="mt-10">
-        <p className="text-sm font-semibold">📈 Cómo viene el negocio</p>
+        <p className="text-sm font-semibold">Cómo viene el negocio</p>
         <p className="mt-1 text-xs text-muted">Últimos 14 días — para ver si vendés más algunos días que otros.</p>
       </div>
 
@@ -190,7 +189,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="mt-4 rounded-xl border border-border bg-surface p-5">
-        <p className="text-sm font-medium">🔁 Suscripciones</p>
+        <p className="text-sm font-medium">Suscripciones</p>
         <div className="mt-3 flex gap-6">
           <div>
             <p className="text-xl font-semibold">{data.suscripcionesActivas}</p>

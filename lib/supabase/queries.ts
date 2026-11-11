@@ -13,7 +13,6 @@ import type {
   MovimientoStock,
   Producto,
   Proveedor,
-  Repartidor,
   Tematica,
   TipoMovimientoStock,
 } from "@/lib/types";
@@ -96,7 +95,7 @@ export async function fetchFrecuenciasSuscripcion(soloActivas = true): Promise<F
     id: f.id,
     dias: f.dias,
     etiqueta: f.etiqueta,
-    precio: Number(f.precio),
+    descuentoPorcentaje: Number(f.descuento_porcentaje ?? 0),
     activa: f.activa,
     orden: f.orden,
   }));
@@ -120,7 +119,7 @@ export async function fetchPedidosAdmin(id?: string): Promise<PedidoAdminRow[]> 
   let query = supabase
     .from("pedidos")
     .select(
-      "id, total, costo_envio, estado, metodo_pago, tipo, personalizada, tipo_entrega, direccion_entrega, comentario_entrega, comprobante_url, creado_en, repartidor_id, cajas(nombre), tematicas(nombre), pedido_items(producto_id, cantidad, precio_unitario, productos(nombre)), perfiles!pedidos_usuario_id_fkey(nombre, apellido, telefono, numero_cliente)"
+      "id, total, costo_envio, estado, metodo_pago, tipo, personalizada, tipo_entrega, direccion_entrega, comentario_entrega, comprobante_url, creado_en, cajas(nombre), tematicas(nombre), pedido_items(producto_id, cantidad, precio_unitario, productos(nombre)), perfiles!pedidos_usuario_id_fkey(nombre, apellido, telefono, numero_cliente)"
     )
     .order("creado_en", { ascending: false });
   if (id) query = query.eq("id", id);
@@ -142,7 +141,6 @@ export async function fetchPedidosAdmin(id?: string): Promise<PedidoAdminRow[]> 
       comentario_entrega: string | null;
       comprobante_url: string | null;
       creado_en: string;
-      repartidor_id: string | null;
       cajas: { nombre: string } | null;
       tematicas: { nombre: string } | null;
       pedido_items: {
@@ -172,7 +170,6 @@ export async function fetchPedidosAdmin(id?: string): Promise<PedidoAdminRow[]> 
       comentario: p.comentario_entrega ?? "",
       comprobanteUrl: p.comprobante_url,
       creadoEn: p.creado_en,
-      repartidorId: p.repartidor_id,
       items: (p.pedido_items ?? []).map((it) => ({
         productoId: it.producto_id,
         nombre: it.productos?.nombre ?? "Producto",
@@ -183,20 +180,6 @@ export async function fetchPedidosAdmin(id?: string): Promise<PedidoAdminRow[]> 
   });
 }
 
-export async function fetchRepartidores(): Promise<Repartidor[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("perfiles")
-    .select("id, nombre, apellido")
-    .eq("rol", "repartidor");
-
-  if (error) throw error;
-
-  return (data ?? []).map((p) => ({
-    id: p.id,
-    nombre: [p.nombre, p.apellido].filter(Boolean).join(" ") || "Sin nombre",
-  }));
-}
 
 export interface DashboardPedidoEnCurso {
   id: string;

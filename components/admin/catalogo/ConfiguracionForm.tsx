@@ -62,7 +62,7 @@ export function ConfiguracionForm({ configInicial }: { configInicial: Configurac
   return (
     <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-2">
       <section className="rounded-xl border border-border bg-surface p-5">
-        <h2 className="font-medium">🚚 Envío</h2>
+        <h2 className="font-medium">Envío</h2>
         <p className="mt-1 text-xs text-muted">Un mismo costo para todos los envíos. Retirar en el local es sin cargo.</p>
         <label htmlFor="config-envio" className="mt-4 mb-1 block text-xs font-medium text-muted">
           Costo de envío
@@ -75,7 +75,7 @@ export function ConfiguracionForm({ configInicial }: { configInicial: Configurac
           className={INPUT}
         />
 
-        <h2 className="mt-6 font-medium">🏪 Retiro en el local</h2>
+        <h2 className="mt-6 font-medium">Retiro en el local</h2>
         <label htmlFor="config-direccion" className="mt-4 mb-1 block text-xs font-medium text-muted">
           Dirección del local
         </label>
@@ -101,7 +101,7 @@ export function ConfiguracionForm({ configInicial }: { configInicial: Configurac
       </section>
 
       <section className="rounded-xl border border-border bg-surface p-5">
-        <h2 className="font-medium">🏦 Datos para transferencias</h2>
+        <h2 className="font-medium">Datos para transferencias</h2>
         <p className="mt-1 text-xs text-muted">
           Se le muestran al cliente cuando elige pagar por transferencia, para que suba el comprobante.
         </p>

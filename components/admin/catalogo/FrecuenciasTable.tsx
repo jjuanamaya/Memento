@@ -7,10 +7,6 @@ import type { FrecuenciaSuscripcion } from "@/lib/types";
 
 type ModalState = { tipo: "crear" } | { tipo: "editar"; frecuencia: FrecuenciaSuscripcion } | null;
 
-function formatoMoneda(valor: number) {
-  return `$${Math.round(valor).toLocaleString("es-AR")}`;
-}
-
 export function FrecuenciasTable({ frecuenciasIniciales }: { frecuenciasIniciales: FrecuenciaSuscripcion[] }) {
   const [frecuencias, setFrecuencias] = useState(
     [...frecuenciasIniciales].sort((a, b) => a.orden - b.orden)
@@ -80,7 +76,8 @@ export function FrecuenciasTable({ frecuenciasIniciales }: { frecuenciasIniciale
     <div>
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm text-muted">
-          Cuánto se cobra por entrega según cada cuánto se manda la caja de la suscripción.
+          Cada cuánto se manda la caja de la suscripción. El precio por entrega es el de la caja que elija el cliente
+          (promedio de sus temáticas) menos el descuento de la frecuencia.
         </p>
         <button
           onClick={() => setModal({ tipo: "crear" })}
@@ -102,7 +99,7 @@ export function FrecuenciasTable({ frecuenciasIniciales }: { frecuenciasIniciale
               <tr>
                 <th className="px-4 py-3">Nombre</th>
                 <th className="px-4 py-3">Cada cuántos días</th>
-                <th className="px-4 py-3">Precio por entrega</th>
+                <th className="px-4 py-3">Descuento</th>
                 <th className="px-4 py-3">Estado</th>
                 <th className="px-4 py-3"></th>
               </tr>
@@ -112,7 +109,9 @@ export function FrecuenciasTable({ frecuenciasIniciales }: { frecuenciasIniciale
                 <tr key={f.id} className="border-t border-border align-top">
                   <td className="px-4 py-3 font-medium">{f.etiqueta}</td>
                   <td className="px-4 py-3 text-muted">{f.dias} días</td>
-                  <td className="px-4 py-3 font-semibold text-brand">{formatoMoneda(f.precio)}</td>
+                  <td className="px-4 py-3 font-semibold text-brand">
+                    {f.descuentoPorcentaje > 0 ? `${f.descuentoPorcentaje}% off` : "Sin descuento"}
+                  </td>
                   <td className="px-4 py-3">
                     <span
                       className={

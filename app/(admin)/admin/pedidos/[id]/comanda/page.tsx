@@ -100,9 +100,11 @@ export default async function ComandaPedidoPage({ params }: { params: Promise<{ 
           <p className="pt-2 text-center text-base font-semibold">
             {cobrar
               ? `COBRAR EN EFECTIVO: ${formatoMoneda(pedido.total)}`
-              : pedido.comprobanteUrl
-                ? "PAGADO POR TRANSFERENCIA"
-                : "TRANSFERENCIA · VERIFICAR PAGO"}
+              : pedido.tipo === "suscripcion"
+                ? "SUSCRIPCIÓN · SE PAGA POR PERÍODO"
+                : pedido.comprobanteUrl
+                  ? "PAGADO POR TRANSFERENCIA"
+                  : "TRANSFERENCIA · VERIFICAR PAGO"}
           </p>
         </section>
       </div>

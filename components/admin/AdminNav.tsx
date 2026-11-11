@@ -26,8 +26,7 @@ export function AdminNav({ nombre }: { nombre: string | null }) {
   return (
     <header className="relative z-50 border-b border-border bg-surface">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3">
-        <Link href="/admin" className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted">
-          <span className="text-lg">🎁</span>
+        <Link href="/admin" className="text-sm font-semibold uppercase tracking-wide text-muted">
           Memento · Admin
         </Link>
 

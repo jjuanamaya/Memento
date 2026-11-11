@@ -6,6 +6,7 @@ import {
   fetchFrecuenciasSuscripcion,
 } from "@/lib/supabase/queries";
 import type { Configuracion } from "@/lib/types";
+import { IconoRegalo } from "@/components/site/IconoRegalo";
 
 function formatoMoneda(valor: number) {
   return `$${Math.round(valor).toLocaleString("es-AR")}`;
@@ -31,17 +32,14 @@ const PASOS = [
 
 const VALORES = [
   {
-    icono: "✍️",
     titulo: "Lista o a tu medida",
     texto: "Elegí una temática y te la llenamos con todo pensado, o armala vos con los productos que quieras.",
   },
   {
-    icono: "📍",
     titulo: "Envío o retiro en Cañada de Gómez",
     texto: "Un único costo de envío para toda la ciudad, o retirala sin cargo en nuestro local.",
   },
   {
-    icono: "💳",
     titulo: "Pagás como prefieras",
     texto: "Por transferencia (subís el comprobante al pedir) o en efectivo al recibir o retirar.",
   },
@@ -80,7 +78,7 @@ function preguntasFrecuentes(config: Configuracion) {
     {
       pregunta: "¿Cómo funciona la suscripción?",
       respuesta:
-        "Elegís el tamaño de la caja, al menos dos temáticas que te gusten y cada cuánto querés recibirla. En cada entrega te llega una temática al azar entre las que elegiste, sin repetir hasta que salgan todas.",
+        "Elegís el tamaño de la caja, al menos dos temáticas que te gusten y cada cuánto querés recibirla. En cada entrega te llega una temática al azar entre las que elegiste, sin repetir hasta que salgan todas. El precio por entrega depende de la caja y las temáticas que elijas, lo ves antes de confirmar y queda fijo para toda tu suscripción.",
     },
     {
       pregunta: "¿Cómo pago la suscripción?",
@@ -119,7 +117,10 @@ export default async function HomePage() {
     return precios.length ? Math.min(...precios) : null;
   };
   const precioDesde = disponibles.length ? Math.min(...disponibles.map((c) => c.precio)) : null;
-  const suscripcionDesde = frecuencias.length ? Math.min(...frecuencias.map((f) => f.precio)) : null;
+  // La suscripción más barata: la caja más económica con el mayor descuento por frecuencia.
+  const mayorDescuento = Math.max(0, ...frecuencias.map((f) => f.descuentoPorcentaje));
+  const suscripcionDesde =
+    frecuencias.length && precioDesde !== null ? Math.round(precioDesde * (1 - mayorDescuento / 100)) : null;
   const preguntas = preguntasFrecuentes(config);
 
   return (
@@ -191,9 +192,9 @@ export default async function HomePage() {
                 )}
               </>
             ) : (
-              <div className="flex h-full items-center justify-center rounded-[2rem] bg-linear-to-br from-brand/30 via-brand/10 to-transparent">
-                <span aria-hidden="true" className="animate-float text-8xl">
-                  🎁
+              <div className="flex h-full items-center justify-center rounded-[2rem] bg-linear-to-br from-brand/30 via-brand/10 to-transparent text-brand">
+                <span className="animate-float">
+                  <IconoRegalo className="h-28 w-28" />
                 </span>
               </div>
             )}
@@ -238,12 +239,7 @@ export default async function HomePage() {
           <div className="grid gap-4">
             {VALORES.map((valor) => (
               <div key={valor.titulo} className="flex gap-4 rounded-2xl border border-border bg-surface p-5">
-                <span
-                  aria-hidden="true"
-                  className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-brand/15 text-2xl"
-                >
-                  {valor.icono}
-                </span>
+                <span aria-hidden="true" className="w-1 flex-shrink-0 rounded-full bg-brand" />
                 <div>
                   <h3 className="font-semibold">{valor.titulo}</h3>
                   <p className="mt-1 text-sm text-muted">{valor.texto}</p>
@@ -284,9 +280,9 @@ export default async function HomePage() {
                   ) : (
                     <div
                       aria-hidden="true"
-                      className="flex h-full items-center justify-center bg-linear-to-br from-brand/30 to-transparent text-6xl"
+                      className="flex h-full items-center justify-center bg-linear-to-br from-brand/30 to-transparent text-brand"
                     >
-                      🎁
+                      <IconoRegalo className="h-16 w-16" />
                     </div>
                   )}
                 </div>
@@ -313,8 +309,8 @@ export default async function HomePage() {
       {/* Suscripción */}
       <section className="mx-auto max-w-6xl px-6 pb-24">
         <div className="relative overflow-hidden rounded-[2rem] bg-brand px-8 py-14 text-brand-foreground sm:px-14">
-          <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 text-[10rem] opacity-15">
-            🎁
+          <div aria-hidden="true" className="pointer-events-none absolute -right-8 -top-8 opacity-15">
+            <IconoRegalo className="h-48 w-48" />
           </div>
           <p className="text-xs font-semibold uppercase tracking-[0.25em]">Suscripción</p>
           <h2 className="mt-3 max-w-xl text-3xl font-semibold tracking-tight sm:text-4xl">

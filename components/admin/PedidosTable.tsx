@@ -12,7 +12,6 @@ import {
   ETIQUETA_ESTADO,
   type EstadoPedido,
   type MetodoPago,
-  type Repartidor,
   type TipoEntrega,
 } from "@/lib/types";
 
@@ -41,7 +40,6 @@ export interface PedidoAdminRow {
   comentario: string;
   comprobanteUrl: string | null;
   creadoEn: string;
-  repartidorId: string | null;
   items: PedidoAdminItem[];
 }
 
@@ -69,13 +67,7 @@ function cumpleFiltro(estado: EstadoPedido, filtro: Filtro) {
   return estado === filtro;
 }
 
-export function PedidosTable({
-  pedidosIniciales,
-  repartidores,
-}: {
-  pedidosIniciales: PedidoAdminRow[];
-  repartidores: Repartidor[];
-}) {
+export function PedidosTable({ pedidosIniciales }: { pedidosIniciales: PedidoAdminRow[] }) {
   const [pedidos, setPedidos] = useState(pedidosIniciales);
   const [filtro, setFiltro] = useState<Filtro>("por_hacer");
   const [busqueda, setBusqueda] = useState("");
@@ -151,30 +143,20 @@ export function PedidosTable({
           `El pedido se canceló, pero no se pudo devolver al stock "${fallo.nombre}". Cargalo a mano en Stock → Registrar movimiento.`
         );
       } else {
-        setMensaje(`Pedido ${numero} cancelado: ${unidades} productos volvieron al stock.`);
+        setMensaje(
+          `Pedido ${numero} cancelado: ${unidades} productos volvieron al stock.` +
+            // La base devuelve la entrega a la suscripción (trigger devolver_entrega_suscripcion).
+            (pedido.tipo === "suscripcion"
+              ? " La entrega volvió a quedar pendiente: generala de nuevo desde Suscripciones."
+              : "")
+        );
       }
+    } else if (estado === "cancelado" && pedido.tipo === "suscripcion") {
+      setMensaje(`Pedido ${numero} cancelado. La entrega volvió a quedar pendiente: generala de nuevo desde Suscripciones.`);
     }
 
     setGuardando(null);
     setPedidos((prev) => prev.map((p) => (p.id === pedido.id ? { ...p, estado } : p)));
-  }
-
-  async function actualizarRepartidor(id: string, repartidorId: string) {
-    setGuardando(id);
-    setError("");
-    const supabase = createClient();
-    const { error: errorUpdate } = await supabase
-      .from("pedidos")
-      .update({ repartidor_id: repartidorId || null })
-      .eq("id", id);
-    setGuardando(null);
-
-    if (errorUpdate) {
-      setError(`No se pudo asignar el repartidor del pedido #${id.slice(0, 8)}. Probá de nuevo.`);
-      return;
-    }
-
-    setPedidos((prev) => prev.map((p) => (p.id === id ? { ...p, repartidorId: repartidorId || null } : p)));
   }
 
   async function verComprobante(ruta: string) {
@@ -231,7 +213,7 @@ export function PedidosTable({
         aria-label={`Imprimir comanda del pedido #${pedido.id.slice(0, 8)}`}
         className="whitespace-nowrap rounded-lg border border-muted/70 px-3 py-1.5 text-xs font-medium hover:border-brand/40"
       >
-        🖨️ Comanda
+        Imprimir comanda
       </Link>
     );
   }
@@ -428,7 +410,17 @@ export function PedidosTable({
             <section>
               <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">Pago</h3>
               <p className="mt-1">{ETIQUETA_PAGO[detalle.metodoPago]}</p>
-              {detalle.metodoPago === "transferencia" &&
+              {detalle.tipo === "suscripcion" ? (
+                // Las suscripciones se pagan por período, no por pedido.
+                <p className="mt-1 text-xs text-muted">
+                  Se paga por período: revisá el pago en{" "}
+                  <Link href="/admin/suscripciones" className="text-brand underline underline-offset-2">
+                    Suscripciones → Historial de pagos
+                  </Link>
+                  .
+                </p>
+              ) : (
+                detalle.metodoPago === "transferencia" &&
                 (detalle.comprobanteUrl ? (
                   <button
                     type="button"
@@ -438,36 +430,19 @@ export function PedidosTable({
                     Ver comprobante de transferencia
                   </button>
                 ) : (
-                  <p className="text-xs text-muted">Pedido sin comprobante adjunto.</p>
-                ))}
+                  // Desde que el comprobante es obligatorio no se puede pedir sin él:
+                  // solo quedan así los pedidos anteriores.
+                  <p className="mt-1 text-xs text-yellow-400">
+                    Pedido hecho antes de que el comprobante fuera obligatorio. Confirmá el pago con el cliente antes
+                    de despacharlo.
+                  </p>
+                ))
+              )}
             </section>
 
-            <section className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted">Estado</p>
-                <div className="mt-1">{selectorEstado(detalle)}</div>
-              </div>
-              <div>
-                <label htmlFor="detalle-repartidor" className="text-xs font-semibold uppercase tracking-wide text-muted">
-                  Repartidor
-                </label>
-                <select
-                  id="detalle-repartidor"
-                  value={detalle.repartidorId ?? ""}
-                  disabled={guardando === detalle.id || repartidores.length === 0}
-                  onChange={(e) => actualizarRepartidor(detalle.id, e.target.value)}
-                  className="mt-1 block rounded-lg border border-muted/70 bg-transparent px-2 py-1 disabled:opacity-50"
-                >
-                  <option value="" className="bg-background">
-                    {repartidores.length === 0 ? "Sin repartidores" : "Sin asignar"}
-                  </option>
-                  {repartidores.map((r) => (
-                    <option key={r.id} value={r.id} className="bg-background">
-                      {r.nombre}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <section>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted">Estado</p>
+              <div className="mt-1">{selectorEstado(detalle)}</div>
             </section>
           </div>
         </Modal>

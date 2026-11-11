@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { BoxBuilder } from "@/components/cliente/BoxBuilder";
 import {
   fetchCajas,
@@ -13,13 +12,34 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Armar mi caja — Memento" };
 
-export default async function ArmarPage() {
+function texto(valor: string | string[] | undefined) {
+  return (Array.isArray(valor) ? valor[0] : valor) ?? "";
+}
+
+/** "id:2,id:1" → { id: 2, id: 1 } (los productos elegidos en la Personalizada). */
+function leerItems(valor: string): Record<string, number> {
+  const cantidades: Record<string, number> = {};
+  for (const par of valor.split(",")) {
+    const [id, cantidad] = par.split(":");
+    const numero = Number(cantidad);
+    if (id && Number.isInteger(numero) && numero > 0) cantidades[id] = numero;
+  }
+  return cantidades;
+}
+
+// Se puede armar la caja sin sesión: el login se pide recién para confirmar.
+// Al volver del login, /armar?caja=…&tematica=…&items=… retoma lo elegido.
+export default async function ArmarPage({ searchParams }: PageProps<"/armar">) {
+  const parametros = await searchParams;
+  const cajaId = texto(parametros.caja);
+  const tematicaId = texto(parametros.tematica);
+  const seleccionInicial =
+    cajaId && tematicaId ? { cajaId, tematicaId, cantidades: leerItems(texto(parametros.items)) } : null;
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login?next=/armar");
 
   const [cajas, tematicas, cotizaciones, productos, categorias, config, perfil] = await Promise.all([
     fetchCajas(),
@@ -28,7 +48,7 @@ export default async function ArmarPage() {
     fetchProductos(),
     fetchCategorias(),
     fetchConfiguracion(),
-    supabase.from("perfiles").select("telefono").eq("id", user.id).single(),
+    user ? supabase.from("perfiles").select("telefono").eq("id", user.id).single() : null,
   ]);
 
   return (
@@ -39,7 +59,9 @@ export default async function ArmarPage() {
       productos={productos}
       categorias={categorias}
       config={config}
-      telefonoInicial={perfil.data?.telefono ?? ""}
+      logueado={!!user}
+      telefonoInicial={perfil?.data?.telefono ?? ""}
+      seleccionInicial={seleccionInicial}
     />
   );
 }

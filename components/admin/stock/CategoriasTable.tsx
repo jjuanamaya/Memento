@@ -32,7 +32,6 @@ function CategoriaForm({
   onSaved: (categoria: CategoriaProducto) => void;
 }) {
   const [nombre, setNombre] = useState(categoria?.nombre ?? "");
-  const [icono, setIcono] = useState(categoria?.icono ?? "");
   const [orden, setOrden] = useState(String(categoria?.orden ?? ordenSugerido));
   const [activa, setActiva] = useState(categoria?.activa ?? true);
   const [guardando, setGuardando] = useState(false);
@@ -54,7 +53,7 @@ function CategoriaForm({
 
     setGuardando(true);
     const supabase = createClient();
-    const payload = { nombre: nombre.trim(), icono: icono.trim() || null, orden: ordenNum, activa };
+    const payload = { nombre: nombre.trim(), orden: ordenNum, activa };
     const resultado = categoria
       ? await supabase.from("categorias_producto").update(payload).eq("id", categoria.id).select().single()
       : await supabase.from("categorias_producto").insert(payload).select().single();
@@ -75,33 +74,18 @@ function CategoriaForm({
   return (
     <Modal titulo={categoria ? "Editar categoría" : "Nueva categoría"} onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div className="grid grid-cols-[1fr_5rem] gap-3">
-          <div>
-            <label htmlFor="categoria-nombre" className="mb-1 block text-xs font-medium text-muted">
-              Nombre
-            </label>
-            <input
-              id="categoria-nombre"
-              value={nombre}
-              maxLength={40}
-              onChange={(e) => setNombre(e.target.value)}
-              placeholder="Ej: Snacks salados"
-              className={INPUT}
-            />
-          </div>
-          <div>
-            <label htmlFor="categoria-icono" className="mb-1 block text-xs font-medium text-muted">
-              Ícono
-            </label>
-            <input
-              id="categoria-icono"
-              value={icono}
-              maxLength={8}
-              onChange={(e) => setIcono(e.target.value)}
-              placeholder="🍿"
-              className={`${INPUT} text-center`}
-            />
-          </div>
+        <div>
+          <label htmlFor="categoria-nombre" className="mb-1 block text-xs font-medium text-muted">
+            Nombre
+          </label>
+          <input
+            id="categoria-nombre"
+            value={nombre}
+            maxLength={40}
+            onChange={(e) => setNombre(e.target.value)}
+            placeholder="Ej: Snacks salados"
+            className={INPUT}
+          />
         </div>
         <div>
           <label htmlFor="categoria-orden" className="mb-1 block text-xs font-medium text-muted">
@@ -229,7 +213,6 @@ export function CategoriasTable({
                 <tr key={c.id} className="border-t border-border">
                   <td className="px-4 py-3 text-muted">{c.orden}</td>
                   <td className="px-4 py-3 font-medium">
-                    {c.icono && <span aria-hidden="true">{c.icono} </span>}
                     {c.nombre}
                   </td>
                   <td className="px-4 py-3 text-muted">{productosPorCategoria[c.id] ?? 0}</td>

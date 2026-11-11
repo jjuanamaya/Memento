@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { MisPedidosList, type MiPedido } from "@/components/cliente/MisPedidosList";
+import { IconoRegalo } from "@/components/site/IconoRegalo";
 
 export const metadata: Metadata = { title: "Mis pedidos — Memento" };
 
@@ -73,8 +74,8 @@ export default async function MisPedidosPage() {
 
       {pedidos.length === 0 ? (
         <div className="animate-fade-in-up mt-8 rounded-2xl border border-muted/30 bg-surface p-8 text-center [animation-delay:120ms]">
-          <span aria-hidden="true" className="text-3xl">
-            🎁
+          <span className="inline-flex text-brand">
+            <IconoRegalo className="h-10 w-10" />
           </span>
           <p className="mt-3 font-medium">Todavía no armaste tu primera caja.</p>
           <p className="mt-1 text-sm text-muted">Elegí una caja, sumale tu toque y convertila en un regalo.</p>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { IconoRegalo } from "@/components/site/IconoRegalo";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { CajaForm } from "@/components/admin/catalogo/CajaForm";
@@ -116,8 +117,8 @@ export function CajasTable({
               {c.imagen ? (
                 <img src={c.imagen} alt="" className="mb-3 h-32 w-full rounded-lg object-cover" />
               ) : (
-                <div className="mb-3 flex h-32 w-full items-center justify-center rounded-lg bg-background text-2xl">
-                  🎁
+                <div className="mb-3 flex h-32 w-full items-center justify-center rounded-lg bg-background text-muted">
+                  <IconoRegalo className="h-10 w-10" />
                 </div>
               )}
               <div className="flex items-start justify-between gap-2">
@@ -136,7 +137,9 @@ export function CajasTable({
               <p className="mt-2 text-sm text-muted">
                 {c.capacidad || "—"} productos · ganancia {c.gananciaPorcentaje}%
               </p>
-              <p className="text-xs text-muted">Personalizada: base {formatoMoneda(c.precio)} + productos</p>
+              <p className="text-xs text-muted">
+                Personalizada: {c.precio > 0 ? `base ${formatoMoneda(c.precio)} + productos` : "solo los productos elegidos"}
+              </p>
 
               <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-muted">Precio por temática</p>
               <ul className="mt-1 space-y-0.5 text-sm">

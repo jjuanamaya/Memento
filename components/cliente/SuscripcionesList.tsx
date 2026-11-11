@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { formatearDia, formatearFechaHora } from "@/lib/fechas";
 import { ACCEPT_COMPROBANTE, borrarComprobante, errorComprobante, subirComprobante } from "@/components/cliente/comprobante";
 import { DatosTransferencia } from "@/components/cliente/DatosTransferencia";
+import { IconoRegalo } from "@/components/site/IconoRegalo";
 import type { Configuracion, EstadoPagoSuscripcion, EstadoSuscripcion, Suscripcion } from "@/lib/types";
 import {
   diasHasta,
@@ -157,8 +158,8 @@ export function SuscripcionesList({ suscripcionesIniciales, config, hoy }: Suscr
   if (suscripciones.length === 0) {
     return (
       <div className="animate-fade-in-up mt-8 rounded-2xl border border-muted/30 bg-surface p-8 text-center">
-        <span aria-hidden="true" className="text-3xl">
-          🎁
+        <span className="inline-flex text-brand">
+          <IconoRegalo className="h-10 w-10" />
         </span>
         <p className="mt-3 font-medium">Todavía no tenés ninguna suscripción.</p>
         <p className="mt-1 text-sm text-muted">Elegí tus temáticas favoritas y dejá que la sorpresa llegue sola.</p>
@@ -225,14 +226,14 @@ export function SuscripcionesList({ suscripcionesIniciales, config, hoy }: Suscr
             {s.estado !== "cancelada" && (
               <p className="mt-2 text-sm">
                 {pendiente ? (
-                  <span className="text-brand">⏳ Comprobante en revisión</span>
+                  <span className="text-brand">Comprobante en revisión</span>
                 ) : deuda.adeuda ? (
                   <span className="text-red-400">
-                    ⚠️ Adeudás el pago del período ({deuda.diasAdeuda} día{deuda.diasAdeuda === 1 ? "" : "s"})
+                    Adeudás el pago del período ({deuda.diasAdeuda} día{deuda.diasAdeuda === 1 ? "" : "s"})
                   </span>
                 ) : s.pagadoHasta ? (
                   <span className="text-emerald-400">
-                    ✓ Pagos al día · el próximo vence el {formatearDia(s.pagadoHasta)}
+                    Pagos al día · el próximo vence el {formatearDia(s.pagadoHasta)}
                   </span>
                 ) : null}
               </p>
